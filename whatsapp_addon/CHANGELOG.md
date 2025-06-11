@@ -1,3 +1,7 @@
+## 1.5.2
+
+ - updated Baylies
+
 ## 1.5.1
 
 - updated config.yaml -> media:rw
