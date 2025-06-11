@@ -19,5 +19,6 @@
     "log4js": ">=6.4.0",
     "pino": "^8.4.2",
     "qr-image": "^3.2.0"
+    "@whiskeysockets/baileys": "latest"
   }
 }
