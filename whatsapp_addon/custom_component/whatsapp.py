@@ -1,20 +1,30 @@
 import requests
-from url_normalize import url_normalize
+from requests.exceptions import RequestException
 
-HOST = 'http://{{HOSTNAME}}:3000/'
+HOST = 'http://{{HOSTNAME}}:3000/' 
 
 class Whatsapp:
+    def _post(self, endpoint, data):
+        url = f"{HOST.rstrip('/')}/{endpoint.lstrip('/')}"
+        try:
+            response = requests.post(url, json=data)
+            response.raise_for_status()  # wirft Exception bei Fehlercode >= 400
+            return response.text.strip() == 'OK'
+        except RequestException as e:
+            print(f"Error calling {url}: {e}")
+            return False
+
     def send_message(self, data):
-        return requests.post(url_normalize(f'{HOST}/sendMessage'), json=data).content == 'OK'
+        return self._post('sendMessage', data)
 
     def set_status(self, data):
-        return requests.post(url_normalize(f'{HOST}/setStatus'), json=data).content == 'OK'
+        return self._post('setStatus', data)
 
     def presence_subscribe(self, data):
-        return requests.post(url_normalize(f'{HOST}/presenceSubscribe'), json=data).content == 'OK'
+        return self._post('presenceSubscribe', data)
 
     def send_presence_update(self, data):
-        return requests.post(url_normalize(f'{HOST}/sendPresenceUpdate'), json=data).content == 'OK'
+        return self._post('sendPresenceUpdate', data)
 
     def send_infinity_presence_update(self, data):
-        return requests.post(url_normalize(f'{HOST}/sendInfinityPresenceUpdate'), json=data).content == 'OK'
+        return self._post('sendInfinityPresenceUpdate', data)
