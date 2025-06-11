@@ -16,7 +16,7 @@ send_message:
       name: Message's body
       description: Message's body
       required: true
-      advanced: true
+      # advanced: true  # entfernen, da wichtig
 
 set_status:
   name: Set status
@@ -42,7 +42,7 @@ presence_subscribe:
       description: Which instance of whatsapp should be used
       required: true
       example: default
-    userId:
+    to:  # oder userId, je nach API
       name: Target User ID
       description: Target User ID
       required: true
