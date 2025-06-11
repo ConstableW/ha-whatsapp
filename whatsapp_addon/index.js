@@ -59,7 +59,8 @@ const onQr = (qr, key) => {
 };
 
 const onMsg = (msg, key) => {
-  const { from, body, timestamp } = msg; // Anpassen an Nachrichtenstruktur
+  logger.debug("msg object:", JSON.stringify(msg, null, 2)); // <-- Logge das msg-Objekt
+  const { from, body, timestamp } = msg;
   axios.post(
     "http://supervisor/core/api/events/new_whatsapp_message",
     { clientId: key, from, body, timestamp },
