@@ -1,5 +1,7 @@
+Buy Me a Coffee – Original Author:
 [![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
 
+Buy Me a Coffee – Maintainer:
 [![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
 
 # Home Assistant Add-on: Whatsapp add-on
