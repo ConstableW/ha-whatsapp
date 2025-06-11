@@ -1,3 +1,7 @@
+## 1.5.5
+
+ - extendet logging 
+
 ## 1.5.4
 
  - Corrected & Extended Readme
