@@ -121,7 +121,11 @@ fs.readFile("data/options.json", function (error, content) {
       if (clients.hasOwnProperty(message.clientId)) {
         const wapp = clients[message.clientId];
         wapp
-          .sendMessage(message.to, message.body, message.options)
+          .sendMessage(
+            message.to,
+            { text: message.body }, 
+            message.options
+          )
           .then(() => {
             res.send("OK");
             logger.debug("Message successfully sended from addon.");
