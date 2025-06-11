@@ -203,6 +203,80 @@ data:
 message: Contact is online!
 mode: single
 ```
+
+## Usage in Node-RED
+
+To send WhatsApp messages from Node-RED, you can use the following flow as a template.  
+Replace `1234567890-987654321@g.us` with your actual group or user ID.
+
+
+
+```yaml
+
+[
+{
+"id": "node1",
+"type": "function",
+"name": "Set WhatsApp Params",
+"func": "msg.env = {\n to: "1234567890-987654321@g.us",\n text: "Hello from Node-RED!"\n};\nreturn msg;",
+"outputs": 1,
+"wires": [["node2"]]
+},
+{
+"id": "node2",
+"type": "api-call-service",
+"name": "Send WhatsApp",
+"server": "server1",
+"data": "{"clientId": "default", "to": $env('to'), "body": $env('text')}",
+"dataType": "jsonata",
+"domain": "whatsapp",
+"service": "send_message",
+"wires": []
+}
+]
+
+
+```
+
+
+**How to use:**
+1. **Import the flow** into Node-RED via the menu: *Import → Clipboard*.
+2. **Replace** `1234567890-987654321@g.us` with your actual group or user ID.
+3. **Adjust** the message text as needed.
+
+
+Key Features:
+Environment Variables:
+
+to: Target group/user ID (e.g., 1234567890-123456789@g.us)
+
+text: Message content
+
+Usage:
+
+```yaml
+
+// In function node:
+msg.env = {
+    to: "1234567890-123456789@g.us", 
+    text: "Sensor value: {{ states('sensor.temperature') }}"
+};
+return msg;
+
+```
+Setup Steps:
+Import Flow:
+Copy the JSON above and import via Node-RED Menu → Import → Clipboard.
+
+Configure:
+
+Replace all 1234567890-... IDs with your actual WhatsApp group/user IDs
+
+Adapt environment variables as needed
+
+Note: The flow uses JSONata expressions to reference environment variables directly in the service call.
+
+
 ## Support & Issues
 
 For support, feature requests or bug reports, please visit the [GitHub repository](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon).
