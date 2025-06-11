@@ -59,8 +59,10 @@ const onQr = (qr, key) => {
 };
 
 const onMsg = (msg, key) => {
-  logger.debug("msg object:", JSON.stringify(msg, null, 2)); // <-- Logge das msg-Objekt
-  const { from, body, timestamp } = msg;
+  const from = msg.key?.remoteJid || msg.from || null;
+  const body = msg.message?.conversation || msg.body || msg.message?.extendedTextMessage?.text || null;
+  const timestamp = msg.timestamp || Date.now();
+  logger.debug("Event data:", { clientId: key, from, body, timestamp });
   axios.post(
     "http://supervisor/core/api/events/new_whatsapp_message",
     { clientId: key, from, body, timestamp },
