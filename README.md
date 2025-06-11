@@ -1,11 +1,12 @@
-[![Buy Me a Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fgiuseppecastaldo%2Fha-addons)
+[![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
+[![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FConstableW%2Fha-whatsapp)
 
 # Home Assistant Add-on: Whatsapp add-on
 
 _Write your Whatsapp message from Home Assistant_
 
-<img src="https://github.com/giuseppecastaldo/ha-addons/blob/main/whatsapp_addon/logo.png?raw=true" width="400"/>
+<img src="https://github.com/ConstableW/ha-whatsapp/blob/main/whatsapp_addon/logo.png?raw=true" width="400"/>
 
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
@@ -24,14 +25,21 @@ A WhatsApp API client that connects through the WhatsApp Web browser app
 **NOTE:** I can't guarantee you will not be blocked by using this method, although it has worked for me. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.
 
 ## Installation guide
-Install add-on from this repository:
-```
-https://github.com/giuseppecastaldo/ha-addons
-```
-Start the add-on and in a few seconds you will see a persistent notification with QRCode, please scan this one with Whatsapp Mobile app.
 
-After add-on installation restart Home Assistant and then copy the following code in _configuration.yaml_
+Install add-on from this repository:
+
+```
+https://github.com/giuseppecastaldo/ha-addons](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon
+```
+
+
+Start the add-on and in a few seconds you will see a persistent notification with QRCode. Please scan this one with the Whatsapp Mobile app.
+
+After add-on installation, restart Home Assistant and then copy the following code in `configuration.yaml`:
+
+
 ```yaml
 whatsapp:
 ```
+
 Then restart Home Assistant. If all went well you will se a _whatsapp.send_message_ service.
