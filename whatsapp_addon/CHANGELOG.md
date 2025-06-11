@@ -1,3 +1,8 @@
+## 1.5.1
+
+- updated config.yaml -> media:rw
+- Updated index.js
+
 ## 1.5.0
 
 - Updated whatsapp library
