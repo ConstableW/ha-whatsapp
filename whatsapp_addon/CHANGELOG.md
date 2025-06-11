@@ -1,3 +1,8 @@
+## 1.5.4
+
+ - Corrected & Extended Readme
+ - Extended the docs.md 
+   
 ## 1.5.3
 
  - serval codechanges
