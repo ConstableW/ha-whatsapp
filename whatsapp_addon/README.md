@@ -1,6 +1,6 @@
 ```markdown
-> ⚠️ This is a personal fork of the original WhatsApp add-on for Home Assistant
-by [Giuseppe Castaldo](https://github.com/giuseppecastaldo).  
+> ⚠️ This is a personal fork of the original WhatsApp add-on for Home Assistant by 
+      [Giuseppe Castaldo](https://github.com/giuseppecastaldo).  
 > Please refer to the [original repository](https://github.com/giuseppecastaldo/ha-addons/tree/main) for upstream changes.
 ```
 
