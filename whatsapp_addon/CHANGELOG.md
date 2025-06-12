@@ -6,7 +6,7 @@
 
 ## 1.5.6
 
- - Changed new_whatsapp_message event.
+ - Updated event handling for new_whatsapp_message
 
 ## 1.5.5
 
@@ -20,7 +20,6 @@
 ## 1.5.3
 
  - Several code changes;
- - Thanks also to ChatGPT & Perplexity for additional debugging suggestions.
  
 ## 1.5.2
 
