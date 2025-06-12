@@ -1,6 +1,6 @@
 {
   "name": "whatsapp_hass_addon",
-  "version": "1.5.6",
+  "version": "1.6.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,8 @@
   "author": "Giuseppe Castaldo",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.27.2",
+    "@whiskeysockets/baileys": "^6.7.18",
+    "axios": "^1.9.0",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
     "eventemitter2": "^6.4.9",

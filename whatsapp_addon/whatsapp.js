@@ -1,11 +1,11 @@
 const EventEmitter = require("eventemitter2");
 
-const makeWASocket = require("./Baileys").default;
+const makeWASocket = require("@whiskeysockets/baileys").default;
 const {
   DisconnectReason,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
-} = require("./Baileys");
+} = require("@whiskeysockets/baileys");
 
 const MessageType = {
   text: "conversation",
