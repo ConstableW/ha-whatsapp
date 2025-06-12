@@ -5,7 +5,6 @@
 ## 1.5.6
 
  - changed new_whatsapp_message event
-   simple usage of trigger.event.data.body
 
 ## 1.5.5
 
