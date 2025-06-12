@@ -116,7 +116,7 @@ const init = (key) => {
 };
 
 // WICHTIG: Pfad zu /data/options.json
-fs.readFile("/data/options.json", function (error, content) {
+fs.readFile("data/options.json", function (error, content) {
   if (error) {
     logger.error("Failed to read options.json:", error);
     process.exit(1);
