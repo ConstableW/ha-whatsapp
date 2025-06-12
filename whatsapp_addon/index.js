@@ -5,6 +5,13 @@ const axios = require("axios");
 const fs = require("fs");
 const { WhatsappClient } = require("./whatsapp");
 
+// Diese Variable ist deklariert, aber wird nicht verwendet
+const axiosConfig = {
+  headers: {
+    Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
+  }
+};
+
 var logger = require("log4js").getLogger();
 logger.level = "info";
 
@@ -61,16 +68,25 @@ const onQr = (qr, key) => {
 };
 
 const onMsg = (msg, key) => {
+  const from = msg.key?.remoteJid || msg.from || null;
+  const body = msg.message?.conversation || msg.body || msg.message?.extendedTextMessage?.text || null;
+  const timestamp = msg.messageTimestamp || msg.timestamp || Date.now();
+  
+  logger.debug("Event data:", { clientId: key, from, body, timestamp });
+  
   axios.post(
     "http://supervisor/core/api/events/new_whatsapp_message",
-    { clientId: key, ...msg },
+    { clientId: key, from, body, timestamp },
     {
       headers: {
         Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
       },
     }
-  );
-  logger.debug(`New message event fired from ${key}.`);
+  ).then(() => {
+    logger.debug(`New message event fired from ${key}.`);
+  }).catch(err => {
+    logger.error(`Failed to send message event for ${key}:`, err);
+  });
 };
 
 const onPresenceUpdate = (presence, key) => {
@@ -106,7 +122,12 @@ const init = (key) => {
   );
 };
 
+// WICHTIG: Pfad korrigieren zu /data/options.json (bei Home Assistant Standard)
 fs.readFile("data/options.json", function (error, content) {
+  if (error) {
+    logger.error("Failed to read options.json:", error);
+    process.exit(1);
+  }
   var options = JSON.parse(content);
 
   options.clients.forEach((key) => {
@@ -124,7 +145,7 @@ fs.readFile("data/options.json", function (error, content) {
           .sendMessage(message.to, message.body, message.options)
           .then(() => {
             res.send("OK");
-            logger.debug("Message successfully sended from addon.");
+            logger.debug("Message successfully sent from addon.");
           })
           .catch((error) => {
             res.send("KO");
