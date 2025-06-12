@@ -27,7 +27,7 @@
 
 ## 1.5.1
 
-- updated config.yaml -> media:rw
+- updated config.yaml 
 - Updated index.js
 
 ## 1.5.0
