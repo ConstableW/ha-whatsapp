@@ -1,6 +1,9 @@
 Buy Me a Coffee – Original Author:
 [![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
 
+Original Repo:
+
+https://github.com/giuseppecastaldo/ha-addons/tree/main
 
 # Home Assistant Add-on: Whatsapp add-on
 
