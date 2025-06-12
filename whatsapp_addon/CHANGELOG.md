@@ -1,3 +1,7 @@
+## 1.6.0
+
+ - Integrated Baileys library as an npm dependency and removed the local copy.
+ 
 ## 1.5.6
 
  - changed new_whatsapp_message event
