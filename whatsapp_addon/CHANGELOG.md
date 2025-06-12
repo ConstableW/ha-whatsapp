@@ -1,7 +1,6 @@
 ## 1.6.0
 
  - Integrated Baileys library as an npm dependency and removed the local copy.
- - Integrated Baileys library as an npm dependency (removed local copy).
  - Messaging to WhatsApp groups (@g.us) works again.
  - Fix based on community insights from GitHub Issue #113 and tips by @ShaylenIT & @arormoser.
 
