@@ -1,9 +1,16 @@
-Buy Me a Coffee – Original Author: [![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
-Buy Me a Coffee – Maintainer: [![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
 
-Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled:
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FConstableW%2Fha-whatsapp)
+> ⚠️ This is a personal fork of the original WhatsApp add-on for Home Assistant by [Giuseppe Castaldo](https://github.com/giuseppecastaldo).  
+> Please refer to the [original repository](https://github.com/giuseppecastaldo/ha-addons/tree/main) for upstream changes.
 
+
+** Buy Me a Coffee – Original Author: **
+
+[![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
+
+
+Original Repo:
+
+https://github.com/giuseppecastaldo/ha-addons/tree/main
 
 # Home Assistant Add-on: Whatsapp add-on
 
@@ -27,22 +34,28 @@ A WhatsApp API client that connects through the WhatsApp Web browser app
 
 **NOTE:** I can't guarantee you will not be blocked by using this method, although it has worked for me. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.
 
-## Installation guide
+# Installation guide
 
 Install add-on from this repository:
 
-```
-https://github.com/giuseppecastaldo/ha-addons](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon
-```
+https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon
 
 
-Start the add-on and in a few seconds you will see a persistent notification with QRCode. Please scan this one with the Whatsapp Mobile app.
+Start the add-on and in a few seconds you will see a persistent notification with QRCode, please scan this one with Whatsapp Mobile app.
 
-After add-on installation, restart Home Assistant and then copy the following code in `configuration.yaml`:
+After add-on installation, restart Home Assistant and then copy the following code in _configuration.yaml_:
 
-
-```yaml
 whatsapp:
-```
 
-Then restart Home Assistant. If all went well you will se a _whatsapp.send_message_ service.
+
+Then restart Home Assistant again. If all went well you will see a _whatsapp.send_message_ service in Home Assistant.
+
+---
+**Support & Issues:**  
+For support, feature requests or bug reports, please visit the [GitHub repository](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon).
+
+We welcome community contributions and feedback!
+
+Buy Me a Coffee – Maintainer:
+
+[![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
