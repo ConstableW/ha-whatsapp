@@ -136,10 +136,21 @@ const init = async (key) => {
 
     clients[key] = sock;
 
-    sock.ev.on("connection.update", (update) => {
+    sock.ev.on("connection.update", async (update) => {
       const { connection, qr } = update;
       if (qr) onQr(qr, key);
-      if (connection === "open") onReady(key);
+if (connection === "open") {
+  try {
+    await saveCreds();
+    logger.info(`✅ Credentials saved (force) for client ${key}`);
+    const files = await fs.promises.readdir(`/data/${key}/auth`);
+    logger.info(`📁 Auth folder content: ${files.join(", ")}`);
+  } catch (err) {
+    logger.error(`❌ Failed to save credentials for ${key} on open:`, err);
+  }
+
+  onReady(key);
+}
       if (connection === "close") onLogout(key);
     });
 
