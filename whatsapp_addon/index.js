@@ -5,7 +5,7 @@ const axios = require("axios");
 const fs = require("fs");
 const { makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
 const log4js = require("log4js");
-const qrimage = require("qr-image");
+const QRCode = require("qrcode"); // <--- NEU
 
 const logger = log4js.getLogger();
 logger.level = "info";
@@ -30,23 +30,23 @@ const onReady = (key) => {
 
 const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
-const code = qrimage.image(qr, { type: "png" });
-
-let chunks = [];
-code.on("data", chunk => { chunks.push(chunk); });
-code.on("end", () => {
-  const buffer = Buffer.concat(chunks);
-  const img_string = buffer.toString("base64");
-  axios.post(
-    "http://supervisor/core/api/services/persistent_notification/create",
-    {
-      title: `Whatsapp QRCode (${key})`,
-      message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
-      notification_id: `whatsapp_addon_qrcode_${key}`,
-    },
-    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
-  );
-});
+  QRCode.toDataURL(qr, { errorCorrectionLevel: 'M' }, (err, url) => {
+    if (err) {
+      logger.error("QR-Code generation failed:", err);
+      return;
+    }
+    axios.post(
+      "http://supervisor/core/api/services/persistent_notification/create",
+      {
+        title: `Whatsapp QRCode (${key})`,
+        message: `Please scan the following QRCode for **${key}** client... ![QRCode](${url})`,
+        notification_id: `whatsapp_addon_qrcode_${key}`,
+      },
+      { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+    ).catch(err => {
+      logger.error("Failed to create notification:", err);
+    });
+  });
 };
 
 const onMsg = (msg, key) => {
