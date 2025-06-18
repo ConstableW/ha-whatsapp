@@ -33,7 +33,7 @@ const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
 
   // Sicherstellen, dass /config/www existiert
-  const wwwDir = '/config/www';
+  const wwwDir = '/homeassistant/www';
   if (!fs.existsSync(wwwDir)) {
     try {
       fs.mkdirSync(wwwDir, { recursive: true });
