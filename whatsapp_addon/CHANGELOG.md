@@ -4,34 +4,6 @@
  - Messaging to WhatsApp groups (@g.us) works again.
  - Fix based on community insights from GitHub Issue #113 and tips by @ShaylenIT & @arormoser.
 
-## 1.5.6
-
- - Updated event handling for new_whatsapp_message
-
-## 1.5.5
-
- - Extended logging.
-
-## 1.5.4
-
- - Corrected & Extended Readme.
- - Extended the docs.md.
-   
-## 1.5.3
-
- - Several code changes;
- 
-## 1.5.2
-
- - Updated local Baileys.
-
-## 1.5.1
-
- - Updated config.yaml.
- - Updated index.js.
- - Fix based on community insights from GitHub Issue #113 and tips by @ShaylenIT & @arormoser.
-
-
 ## 1.5.0
 
 - Updated whatsapp library
