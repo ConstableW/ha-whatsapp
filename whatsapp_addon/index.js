@@ -21,53 +21,61 @@ app.use(bodyParser.json());
 const clients = {};
 
 const onReady = (key) => {
-  logger.info(`[${key}] Client ist bereit.`);
+  logger.info(key, "client is ready.");
   axios.post(
     "http://supervisor/core/api/services/persistent_notification/dismiss",
-    { notification_id: `whatsapp_addon_qrcode_${key}` },
-    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+    { notification_id: whatsapp_addon_qrcode_${key} },
+    { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
   );
 };
 
 const onQr = (qr, key) => {
-  logger.info(`[${key}] QR-Code erforderlich, siehe Benachrichtigungen.`);
+  logger.info(key, "require authentication over QRCode, please see your notifications...");
 
-  const wwwDir = '/config/www';
+  // Sicherstellen, dass /homeassistant/www existiert
+  const wwwDir = '/homeassistant/www';
   if (!fs.existsSync(wwwDir)) {
     try {
       fs.mkdirSync(wwwDir, { recursive: true });
-      logger.info(`[System] Verzeichnis erstellt: ${wwwDir}`);
+      logger.info(Created directory: ${wwwDir});
     } catch (err) {
-      logger.error(`[Fehler] Verzeichnis ${wwwDir} konnte nicht erstellt werden:`, err);
+      logger.error(Failed to create directory ${wwwDir}:, err);
       return;
     }
   }
 
-  const fileName = `qrcode_${key}.png`;
+  // Dateipfad und URL
+  const fileName = qrcode_${key}.png;
   const filePath = path.join(wwwDir, fileName);
-  const fileUrl = `/local/${fileName}`;
+  const fileUrl = /local/${fileName};
 
+  // QR-Code als PNG speichern
   QRCode.toFile(
     filePath,
     qr,
-    { errorCorrectionLevel: 'M', margin: 2, scale: 10 },
+    {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      scale: 10
+    },
     (err) => {
       if (err) {
-        logger.error(`[${key}] QR-Code-Erstellung fehlgeschlagen:`, err);
+        logger.error(QR-Code generation failed for ${key}:, err);
         return;
       }
-      logger.info(`[${key}] QR-Code gespeichert unter ${filePath}`);
+      logger.info(QR-Code for ${key} saved to ${filePath});
 
+      // Persistent Notification mit Bild
       axios.post(
         "http://supervisor/core/api/services/persistent_notification/create",
         {
-          title: `Whatsapp QRCode (${key})`,
-          message: `**Scanne diesen QR-Code für ${key}:**\n\n![QRCode](${fileUrl}?v=${Date.now()})`,
-          notification_id: `whatsapp_addon_qrcode_${key}`,
+          title: Whatsapp QRCode (${key}),
+          message: **Scanne diesen QR-Code für ${key}:**\n\n![QRCode](${fileUrl}?v=${Date.now()}),
+          notification_id: whatsapp_addon_qrcode_${key},
         },
-        { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+        { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
       ).catch(err => {
-        logger.error(`[${key}] Benachrichtigung fehlgeschlagen:`, err);
+        logger.error("Failed to create notification:", err);
       });
     }
   );
@@ -81,14 +89,16 @@ const onMsg = (msg, key) => {
     || null;
   const timestamp = msg.messageTimestamp || msg.timestamp || Date.now();
 
-  logger.debug(`[${key}] Nachricht empfangen:`, { from, body, timestamp });
+  logger.debug("Event data:", { clientId: key, from, body, timestamp });
 
   axios.post(
     "http://supervisor/core/api/events/new_whatsapp_message",
     { clientId: key, from, body, timestamp },
-    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
-  ).catch(err => {
-    logger.error(`[${key}] Eventversand fehlgeschlagen:`, err);
+    { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
+  ).then(() => {
+    logger.debug(New message event fired from ${key}.);
+  }).catch(err => {
+    logger.error(Failed to send message event for ${key}:, err);
   });
 };
 
@@ -96,57 +106,65 @@ const onPresenceUpdate = (presence, key) => {
   axios.post(
     "http://supervisor/core/api/events/whatsapp_presence_update",
     { clientId: key, ...presence },
-    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+    { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
   );
-  logger.debug(`[${key}] Präsenzupdate gesendet.`);
+  logger.debug(New presence event fired from ${key}.);
 };
 
 const onLogout = async (key) => {
-  logger.info(`[${key}] Logout erkannt, starte neu...`);
+  logger.info(Client ${key} was logged out. Restarting...);
   try {
-    await fs.promises.rm(`/data/${key}/auth`, { recursive: true, force: true });
+    await fs.promises.rm(/data/${key}/auth, { recursive: true, force: true });
   } catch (error) {
-    logger.error(`[${key}] Auth-Daten löschen fehlgeschlagen:`, error);
+    logger.error(Error deleting auth data for ${key}:, error);
   }
   init(key);
 };
 
 const init = async (key) => {
   try {
-    const authPath = `/data/${key}/auth`;
+    const authPath = /data/${key}/auth;
     await fs.promises.mkdir(authPath, { recursive: true });
 
+    // Baileys MultiFile AuthState
     const { state, saveCreds } = await useMultiFileAuthState(authPath);
-    const sock = makeWASocket({ auth: state, printQRInTerminal: false });
+
+    const sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: false,
+    });
 
     clients[key] = sock;
 
     sock.ev.on("connection.update", async (update) => {
       const { connection, qr } = update;
       if (qr) onQr(qr, key);
-      logger.info(`[${key}] Verbindungsstatus: ${connection}`);
+     logger.debug(" FULL connection.update:", update);
+      logger.info( Verbindung geupdated – aktueller Status: ${connection});
+if (connection === "open") {
+  try {
+    await saveCreds();
+    logger.info( Credentials saved (force) for client ${key});
+    const files = await fs.promises.readdir(/data/${key}/auth);
+    logger.info( Auth folder content: ${files.join(", ")});
+  } catch (err) {
+    logger.error( Failed to save credentials for ${key} on open:, err);
+  }
 
-      if (connection === "open") {
-        try {
-          await saveCreds();
-          const files = await fs.promises.readdir(authPath);
-          logger.info(`[${key}] Auth-Daten gespeichert. Inhalt: ${files.join(", ")}`);
-        } catch (err) {
-          logger.error(`[${key}] Fehler beim Speichern der Auth-Daten:`, err);
-        }
-        onReady(key);
-      }
+  onReady(key);
+}
       if (connection === "close") onLogout(key);
     });
 
-    sock.ev.on("creds.update", async () => {
-      try {
-        await saveCreds();
-        logger.info(`[${key}] Auth-Daten aktualisiert.`);
-      } catch (err) {
-        logger.error(`[${key}] Fehler bei Auth-Update:`, err);
-      }
-    });
+    // WICHTIG: Sessiondaten speichern!
+sock.ev.on("creds.update", async () => {
+  try {
+    await saveCreds();
+    logger.info( Credentials saved successfully for client ${key});
+  } catch (err) {
+    logger.error( Failed to save credentials for client ${key}:, err);
+  }
+});
 
     sock.ev.on("messages.upsert", async ({ messages }) => {
       if (messages && messages.length > 0) {
@@ -156,46 +174,51 @@ const init = async (key) => {
 
     sock.ev.on("presence.update", (presence) => onPresenceUpdate(presence, key));
   } catch (error) {
-    logger.error(`[${key}] Initialisierung fehlgeschlagen:`, error);
+    logger.error(Initialization failed for client ${key}:, error);
     setTimeout(() => init(key), 30000);
   }
 };
 
+// Optionen laden und Clients initialisieren
 fs.readFile("data/options.json", async function (error, content) {
   if (error) {
-    logger.error("Konnte options.json nicht lesen:", error);
+    logger.error("Failed to read options.json:", error);
     process.exit(1);
   }
   const options = JSON.parse(content);
+
   for (const key of options.clients) {
     await init(key);
   }
 
-  app.listen(port, () => logger.info("Whatsapp Addon gestartet."));
+  app.listen(port, () => logger.info(Whatsapp Addon started.));
 
+  // Nachrichten senden
   app.post("/sendMessage", async (req, res) => {
     const message = req.body;
     if (!message.clientId || !clients[message.clientId]) {
-      logger.error("Client ID nicht gefunden.");
+      logger.error("Error in sending message. Client ID not found.");
       return res.send("KO");
     }
     if (!message.to || !message.body) {
-      logger.error("Zieladresse oder Nachricht fehlt.");
+      logger.error("Error in sending message. 'to' or 'body' missing.");
       return res.send("KO");
     }
     try {
       await clients[message.clientId].sendMessage(message.to, { text: message.body }, message.options || {});
       res.send("OK");
+      logger.debug("Message successfully sent from addon.");
     } catch (error) {
       res.send("KO");
-      logger.error("Fehler beim Senden:", error.message);
+      logger.error(error.message);
     }
   });
 
+  // Status setzen
   app.post("/setStatus", async (req, res) => {
     const { clientId, status } = req.body;
     if (!clientId || !clients[clientId]) {
-      logger.error("Client ID nicht gefunden.");
+      logger.error("Error in set status. Client ID not found.");
       return res.send("KO");
     }
     try {
@@ -203,14 +226,15 @@ fs.readFile("data/options.json", async function (error, content) {
       res.send("OK");
     } catch (error) {
       res.send("KO");
-      logger.error("Fehler beim Status-Update:", error.message);
+      logger.error(error.message);
     }
   });
 
+  // Präsenz abonnieren
   app.post("/presenceSubscribe", async (req, res) => {
     const { clientId, userId } = req.body;
     if (!clientId || !clients[clientId]) {
-      logger.error("Client ID nicht gefunden.");
+      logger.error("Error in subscribe presence. Client ID not found.");
       return res.send("KO");
     }
     try {
@@ -218,14 +242,15 @@ fs.readFile("data/options.json", async function (error, content) {
       res.send("OK");
     } catch (error) {
       res.send("KO");
-      logger.error("Fehler beim Präsenz-Abonnement:", error.message);
+      logger.error(error.message);
     }
   });
 
+  // Präsenz-Update senden
   app.post("/sendPresenceUpdate", async (req, res) => {
     const { clientId, type, to } = req.body;
     if (!clientId || !clients[clientId]) {
-      logger.error("Client ID nicht gefunden.");
+      logger.error("Error in presence update. Client ID not found.");
       return res.send("KO");
     }
     try {
@@ -233,7 +258,7 @@ fs.readFile("data/options.json", async function (error, content) {
       res.send("OK");
     } catch (error) {
       res.send("KO");
-      logger.error("Fehler beim Präsenz-Update:", error.message);
+      logger.error(error.message);
     }
   });
 });
