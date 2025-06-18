@@ -30,21 +30,23 @@ const onReady = (key) => {
 
 const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
-  const code = qrimage.image(qr, { type: "png" });
+const code = qrimage.image(qr, { type: "png" });
 
-  let img_string = "";
-  code.on("data", chunk => { img_string += chunk.toString("base64"); });
-  code.on("end", () => {
-    axios.post(
-      "http://supervisor/core/api/services/persistent_notification/create",
-      {
-        title: `Whatsapp QRCode (${key})`,
-        message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
-        notification_id: `whatsapp_addon_qrcode_${key}`,
-      },
-      { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
-    );
-  });
+let chunks = [];
+code.on("data", chunk => { chunks.push(chunk); });
+code.on("end", () => {
+  const buffer = Buffer.concat(chunks);
+  const img_string = buffer.toString("base64");
+  axios.post(
+    "http://supervisor/core/api/services/persistent_notification/create",
+    {
+      title: `Whatsapp QRCode (${key})`,
+      message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
+      notification_id: `whatsapp_addon_qrcode_${key}`,
+    },
+    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+  );
+});
 };
 
 const onMsg = (msg, key) => {
