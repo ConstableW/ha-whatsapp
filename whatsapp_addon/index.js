@@ -32,30 +32,53 @@ const onReady = (key) => {
 const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
 
-  // Zielpfad im Home Assistant-Dateisystem
+  // Sicherstellen, dass /config/www existiert
+  const wwwDir = '/config/www';
+  if (!fs.existsSync(wwwDir)) {
+    try {
+      fs.mkdirSync(wwwDir, { recursive: true });
+      logger.info(`Created directory: ${wwwDir}`);
+    } catch (err) {
+      logger.error(`Failed to create directory ${wwwDir}:`, err);
+      return;
+    }
+  }
+
+  // Dateipfad und URL
   const fileName = `qrcode_${key}.png`;
-  const filePath = `/config/www/${fileName}`;
+  const filePath = path.join(wwwDir, fileName);
   const fileUrl = `/local/${fileName}`;
 
-  // QR-Code als PNG-Datei speichern
-QRCode.toFile(filePath, qr, { errorCorrectionLevel: 'M' }, (err) => {
-  if (err) {
-    logger.error(`QR-Code generation failed for ${key} – path: ${filePath}`, err);
-    return;
-  }
-  logger.info(`QR-Code for ${key} saved to ${filePath}`);
-    axios.post(
-      "http://supervisor/core/api/services/persistent_notification/create",
-      {
-        title: `Whatsapp QRCode (${key})`,
-        message: `Please scan the following QRCode for **${key}** client... ![QRCode](${fileUrl})`,
-        notification_id: `whatsapp_addon_qrcode_${key}`,
-      },
-      { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
-    ).catch(err => {
-      logger.error("Failed to create notification:", err);
-    });
-  });
+  // QR-Code als PNG speichern
+  QRCode.toFile(
+    filePath,
+    qr,
+    {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      scale: 10
+    },
+    (err) => {
+      if (err) {
+        logger.error(`QR-Code generation failed for ${key}:`, err);
+        return;
+      }
+      logger.info(`QR-Code for ${key} saved to ${filePath}`);
+
+      // Persistent Notification mit Bild
+      axios.post(
+        "http://supervisor/core/api/services/persistent_notification/create",
+        {
+          title: `Whatsapp QRCode (${key})`,
+          message: `**Scanne diesen QR-Code für ${key}:**\n\n![QRCode](${fileUrl}?v=${Date.now()})`,
+          notification_id: `whatsapp_addon_qrcode_${key}`,
+        },
+        { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+      ).catch(err => {
+        logger.error("Failed to create notification:", err);
+      });
+    }
+  );
 };
 
 const onMsg = (msg, key) => {
@@ -130,7 +153,6 @@ const init = async (key) => {
     sock.ev.on("presence.update", (presence) => onPresenceUpdate(presence, key));
   } catch (error) {
     logger.error(`Initialization failed for client ${key}:`, error);
-    // Optional: Neustart nach Delay
     setTimeout(() => init(key), 30000);
   }
 };
