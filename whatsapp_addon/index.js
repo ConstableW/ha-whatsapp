@@ -144,7 +144,14 @@ const init = async (key) => {
     });
 
     // WICHTIG: Sessiondaten speichern!
-    sock.ev.on("creds.update", saveCreds);
+sock.ev.on("creds.update", async () => {
+  try {
+    await saveCreds();
+    logger.info(`✅ Credentials saved successfully for client ${key}`);
+  } catch (err) {
+    logger.error(`❌ Failed to save credentials for client ${key}:`, err);
+  }
+});
 
     sock.ev.on("messages.upsert", async ({ messages }) => {
       if (messages && messages.length > 0) {
