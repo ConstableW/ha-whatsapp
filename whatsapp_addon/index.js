@@ -32,7 +32,7 @@ const onReady = (key) => {
 const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
 
-  // Sicherstellen, dass /config/www existiert
+  // Sicherstellen, dass /homeassistant/www existiert
   const wwwDir = '/homeassistant/www';
   if (!fs.existsSync(wwwDir)) {
     try {
@@ -126,6 +126,7 @@ const init = async (key) => {
     const authPath = `/data/${key}/auth`;
     await fs.promises.mkdir(authPath, { recursive: true });
 
+    // Baileys MultiFile AuthState
     const { state, saveCreds } = await useMultiFileAuthState(authPath);
 
     const sock = makeWASocket({
@@ -142,6 +143,7 @@ const init = async (key) => {
       if (connection === "close") onLogout(key);
     });
 
+    // WICHTIG: Sessiondaten speichern!
     sock.ev.on("creds.update", saveCreds);
 
     sock.ev.on("messages.upsert", async ({ messages }) => {
