@@ -16,7 +16,6 @@ init: false
 map:
   - "homeassistant_config:rw"
   - "media:rw"
-  - "data:rw"
 options:
   clients:
     - default
