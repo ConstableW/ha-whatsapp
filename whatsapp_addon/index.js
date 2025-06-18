@@ -3,9 +3,10 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const axios = require("axios");
 const fs = require("fs");
+const path = require("path");
 const { makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
 const log4js = require("log4js");
-const qrimage = require("qr-image"); 
+const QRCode = require("qrcode");
 
 const logger = log4js.getLogger();
 logger.level = "info";
@@ -30,20 +31,30 @@ const onReady = (key) => {
 
 const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
-  const code = qrimage.image(qr, { type: "png" });
 
-  let img_string = "";
-  code.on("data", chunk => { img_string += chunk.toString("base64"); });
-  code.on("end", () => {
+  // Zielpfad im Home Assistant-Dateisystem
+  const fileName = `qrcode_${key}.png`;
+  const filePath = `/config/www/${fileName}`;
+  const fileUrl = `/local/${fileName}`;
+
+  // QR-Code als PNG-Datei speichern
+  QRCode.toFile(filePath, qr, { errorCorrectionLevel: 'M' }, (err) => {
+    if (err) {
+      logger.error("QR-Code generation failed:", err);
+      return;
+    }
+    logger.info(`QR-Code saved to ${filePath}`);
     axios.post(
       "http://supervisor/core/api/services/persistent_notification/create",
       {
         title: `Whatsapp QRCode (${key})`,
-        message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
+        message: `Please scan the following QRCode for **${key}** client... ![QRCode](${fileUrl})`,
         notification_id: `whatsapp_addon_qrcode_${key}`,
       },
       { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
-    );
+    ).catch(err => {
+      logger.error("Failed to create notification:", err);
+    });
   });
 };
 
