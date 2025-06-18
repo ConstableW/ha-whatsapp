@@ -5,7 +5,6 @@ description: Whatsapp addon for send message from Home Assistant
 url: "https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon"
 homeassistant_api: true
 hassio_api: true
-hassio_role: manager
 arch:
   - armhf
   - armv7
@@ -14,8 +13,8 @@ arch:
   - i386
 init: false
 map:
-  - "config:rw"
-  - "media:rw"
+  - config:rw
+  - media:rw
 options:
   clients:
     - default
