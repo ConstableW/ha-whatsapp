@@ -38,12 +38,12 @@ const onQr = (qr, key) => {
   const fileUrl = `/local/${fileName}`;
 
   // QR-Code als PNG-Datei speichern
-  QRCode.toFile(filePath, qr, { errorCorrectionLevel: 'M' }, (err) => {
-    if (err) {
-      logger.error("QR-Code generation failed:", err);
-      return;
-    }
-    logger.info(`QR-Code saved to ${filePath}`);
+QRCode.toFile(filePath, qr, { errorCorrectionLevel: 'M' }, (err) => {
+  if (err) {
+    logger.error(`QR-Code generation failed for ${key} – path: ${filePath}`, err);
+    return;
+  }
+  logger.info(`QR-Code for ${key} saved to ${filePath}`);
     axios.post(
       "http://supervisor/core/api/services/persistent_notification/create",
       {
