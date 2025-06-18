@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const axios = require("axios");
 const fs = require("fs");
-const { makeWASocket, useSingleFileAuthState } = require("@whiskeysockets/baileys");
+const { makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
 const log4js = require("log4js");
 const qrimage = require("qr-image");
 
@@ -79,57 +79,66 @@ const onPresenceUpdate = (presence, key) => {
 
 const onLogout = async (key) => {
   logger.info(`Client ${key} was logged out. Restarting...`);
-  await fs.promises.rm(`/data/${key}`, { recursive: true, force: true });
+  try {
+    await fs.promises.rm(`/data/${key}/auth`, { recursive: true, force: true });
+  } catch (error) {
+    logger.error(`Error deleting auth data for ${key}:`, error);
+  }
   init(key);
 };
 
-const init = (key) => {
-  // Authentifizierungsdaten pro Client
-  const authPath = `/data/${key}/auth_info.json`;
-  fs.mkdirSync(`/data/${key}`, { recursive: true });
-  const { state, saveState } = useSingleFileAuthState(authPath);
+const init = async (key) => {
+  try {
+    const authPath = `/data/${key}/auth`;
+    await fs.promises.mkdir(authPath, { recursive: true });
 
-  const sock = makeWASocket({ auth: state });
+    const { state, saveCreds } = await useMultiFileAuthState(authPath);
 
-  clients[key] = sock;
+    const sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: false,
+    });
 
-  // QR-Code und Verbindungsstatus
-  sock.ev.on("connection.update", (update) => {
-    const { connection, qr } = update;
-    if (qr) onQr(qr, key);
-    if (connection === "open") onReady(key);
-    if (connection === "close") onLogout(key);
-  });
+    clients[key] = sock;
 
-  // Auth-Daten speichern
-  sock.ev.on("creds.update", saveState);
+    sock.ev.on("connection.update", (update) => {
+      const { connection, qr } = update;
+      if (qr) onQr(qr, key);
+      if (connection === "open") onReady(key);
+      if (connection === "close") onLogout(key);
+    });
 
-  // Nachrichtenempfang
-  sock.ev.on("messages.upsert", async ({ messages }) => {
-    if (messages && messages.length > 0) {
-      onMsg(messages[0], key);
-    }
-  });
+    sock.ev.on("creds.update", saveCreds);
 
-  // Präsenz-Updates (optional)
-  sock.ev.on("presence.update", (presence) => onPresenceUpdate(presence, key));
+    sock.ev.on("messages.upsert", async ({ messages }) => {
+      if (messages && messages.length > 0) {
+        onMsg(messages[0], key);
+      }
+    });
+
+    sock.ev.on("presence.update", (presence) => onPresenceUpdate(presence, key));
+  } catch (error) {
+    logger.error(`Initialization failed for client ${key}:`, error);
+    // Optional: Neustart nach Delay
+    setTimeout(() => init(key), 30000);
+  }
 };
 
-// WICHTIG: Pfad zu /data/options.json
-fs.readFile("data/options.json", function (error, content) {
+// Optionen laden und Clients initialisieren
+fs.readFile("data/options.json", async function (error, content) {
   if (error) {
     logger.error("Failed to read options.json:", error);
     process.exit(1);
   }
   const options = JSON.parse(content);
 
-  options.clients.forEach((key) => {
-    init(key);
-  });
+  for (const key of options.clients) {
+    await init(key);
+  }
 
   app.listen(port, () => logger.info(`Whatsapp Addon started.`));
 
-  // Senden von Nachrichten
+  // Nachrichten senden
   app.post("/sendMessage", async (req, res) => {
     const message = req.body;
     if (!message.clientId || !clients[message.clientId]) {
