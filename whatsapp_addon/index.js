@@ -3,10 +3,9 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
-const { makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
+const { makeWASocket, useSingleFileAuthState } = require("@whiskeysockets/baileys");
 const log4js = require("log4js");
-const QRCode = require("qrcode");
+const qrimage = require("qr-image");
 
 const logger = log4js.getLogger();
 logger.level = "info";
@@ -24,61 +23,28 @@ const onReady = (key) => {
   logger.info(key, "client is ready.");
   axios.post(
     "http://supervisor/core/api/services/persistent_notification/dismiss",
-    { notification_id: whatsapp_addon_qrcode_${key} },
-    { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
+    { notification_id: `whatsapp_addon_qrcode_${key}` },
+    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
   );
 };
 
 const onQr = (qr, key) => {
   logger.info(key, "require authentication over QRCode, please see your notifications...");
+  const code = qrimage.image(qr, { type: "png" });
 
-  // Sicherstellen, dass /homeassistant/www existiert
-  const wwwDir = '/homeassistant/www';
-  if (!fs.existsSync(wwwDir)) {
-    try {
-      fs.mkdirSync(wwwDir, { recursive: true });
-      logger.info(Created directory: ${wwwDir});
-    } catch (err) {
-      logger.error(Failed to create directory ${wwwDir}:, err);
-      return;
-    }
-  }
-
-  // Dateipfad und URL
-  const fileName = qrcode_${key}.png;
-  const filePath = path.join(wwwDir, fileName);
-  const fileUrl = /local/${fileName};
-
-  // QR-Code als PNG speichern
-  QRCode.toFile(
-    filePath,
-    qr,
-    {
-      errorCorrectionLevel: 'M',
-      margin: 2,
-      scale: 10
-    },
-    (err) => {
-      if (err) {
-        logger.error(QR-Code generation failed for ${key}:, err);
-        return;
-      }
-      logger.info(QR-Code for ${key} saved to ${filePath});
-
-      // Persistent Notification mit Bild
-      axios.post(
-        "http://supervisor/core/api/services/persistent_notification/create",
-        {
-          title: Whatsapp QRCode (${key}),
-          message: **Scanne diesen QR-Code für ${key}:**\n\n![QRCode](${fileUrl}?v=${Date.now()}),
-          notification_id: whatsapp_addon_qrcode_${key},
-        },
-        { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
-      ).catch(err => {
-        logger.error("Failed to create notification:", err);
-      });
-    }
-  );
+  let img_string = "";
+  code.on("data", chunk => { img_string += chunk.toString("base64"); });
+  code.on("end", () => {
+    axios.post(
+      "http://supervisor/core/api/services/persistent_notification/create",
+      {
+        title: `Whatsapp QRCode (${key})`,
+        message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
+        notification_id: `whatsapp_addon_qrcode_${key}`,
+      },
+      { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
+    );
+  });
 };
 
 const onMsg = (msg, key) => {
@@ -94,11 +60,11 @@ const onMsg = (msg, key) => {
   axios.post(
     "http://supervisor/core/api/events/new_whatsapp_message",
     { clientId: key, from, body, timestamp },
-    { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
+    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
   ).then(() => {
-    logger.debug(New message event fired from ${key}.);
+    logger.debug(`New message event fired from ${key}.`);
   }).catch(err => {
-    logger.error(Failed to send message event for ${key}:, err);
+    logger.error(`Failed to send message event for ${key}:`, err);
   });
 };
 
@@ -106,94 +72,64 @@ const onPresenceUpdate = (presence, key) => {
   axios.post(
     "http://supervisor/core/api/events/whatsapp_presence_update",
     { clientId: key, ...presence },
-    { headers: { Authorization: Bearer ${process.env.SUPERVISOR_TOKEN} } }
+    { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
   );
-  logger.debug(New presence event fired from ${key}.);
+  logger.debug(`New presence event fired from ${key}.`);
 };
 
 const onLogout = async (key) => {
-  logger.info(Client ${key} was logged out. Restarting...);
-  try {
-    await fs.promises.rm(/data/${key}/auth, { recursive: true, force: true });
-  } catch (error) {
-    logger.error(Error deleting auth data for ${key}:, error);
-  }
+  logger.info(`Client ${key} was logged out. Restarting...`);
+  await fs.promises.rm(`/data/${key}`, { recursive: true, force: true });
   init(key);
 };
 
-const init = async (key) => {
-  try {
-    const authPath = /data/${key}/auth;
-    await fs.promises.mkdir(authPath, { recursive: true });
+const init = (key) => {
+  // Authentifizierungsdaten pro Client
+  const authPath = `/data/${key}/auth_info.json`;
+  fs.mkdirSync(`/data/${key}`, { recursive: true });
+  const { state, saveState } = useSingleFileAuthState(authPath);
 
-    // Baileys MultiFile AuthState
-    const { state, saveCreds } = await useMultiFileAuthState(authPath);
+  const sock = makeWASocket({ auth: state });
 
-    const sock = makeWASocket({
-      auth: state,
-      printQRInTerminal: false,
-    });
+  clients[key] = sock;
 
-    clients[key] = sock;
+  // QR-Code und Verbindungsstatus
+  sock.ev.on("connection.update", (update) => {
+    const { connection, qr } = update;
+    if (qr) onQr(qr, key);
+    if (connection === "open") onReady(key);
+    if (connection === "close") onLogout(key);
+  });
 
-    sock.ev.on("connection.update", async (update) => {
-      const { connection, qr } = update;
-      if (qr) onQr(qr, key);
-     logger.debug(" FULL connection.update:", update);
-      logger.info( Verbindung geupdated – aktueller Status: ${connection});
-if (connection === "open") {
-  try {
-    await saveCreds();
-    logger.info( Credentials saved (force) for client ${key});
-    const files = await fs.promises.readdir(/data/${key}/auth);
-    logger.info( Auth folder content: ${files.join(", ")});
-  } catch (err) {
-    logger.error( Failed to save credentials for ${key} on open:, err);
-  }
+  // Auth-Daten speichern
+  sock.ev.on("creds.update", saveState);
 
-  onReady(key);
-}
-      if (connection === "close") onLogout(key);
-    });
+  // Nachrichtenempfang
+  sock.ev.on("messages.upsert", async ({ messages }) => {
+    if (messages && messages.length > 0) {
+      onMsg(messages[0], key);
+    }
+  });
 
-    // WICHTIG: Sessiondaten speichern!
-sock.ev.on("creds.update", async () => {
-  try {
-    await saveCreds();
-    logger.info( Credentials saved successfully for client ${key});
-  } catch (err) {
-    logger.error( Failed to save credentials for client ${key}:, err);
-  }
-});
-
-    sock.ev.on("messages.upsert", async ({ messages }) => {
-      if (messages && messages.length > 0) {
-        onMsg(messages[0], key);
-      }
-    });
-
-    sock.ev.on("presence.update", (presence) => onPresenceUpdate(presence, key));
-  } catch (error) {
-    logger.error(Initialization failed for client ${key}:, error);
-    setTimeout(() => init(key), 30000);
-  }
+  // Präsenz-Updates (optional)
+  sock.ev.on("presence.update", (presence) => onPresenceUpdate(presence, key));
 };
 
-// Optionen laden und Clients initialisieren
-fs.readFile("data/options.json", async function (error, content) {
+// WICHTIG: Pfad zu /data/options.json
+fs.readFile("data/options.json", function (error, content) {
   if (error) {
     logger.error("Failed to read options.json:", error);
     process.exit(1);
   }
   const options = JSON.parse(content);
 
-  for (const key of options.clients) {
-    await init(key);
-  }
+  options.clients.forEach((key) => {
+    init(key);
+  });
 
-  app.listen(port, () => logger.info(Whatsapp Addon started.));
+  app.listen(port, () => logger.info(`Whatsapp Addon started.`));
 
-  // Nachrichten senden
+  // Senden von Nachrichten
   app.post("/sendMessage", async (req, res) => {
     const message = req.body;
     if (!message.clientId || !clients[message.clientId]) {
