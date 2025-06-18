@@ -1,7 +1,7 @@
 import requests
 from requests.exceptions import RequestException
 
-HOST = 'http://{{HOSTNAME}}:3000/' 
+HOST = 'http://1ffb9e7b-whatsapp-addon:3000/' 
 
 class Whatsapp:
     def _post(self, endpoint, data):

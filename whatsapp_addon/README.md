@@ -1,16 +1,8 @@
-
-> ⚠️ This is a personal fork of the original WhatsApp add-on for Home Assistant by [Giuseppe Castaldo](https://github.com/giuseppecastaldo).  
-> Please refer to the [original repository](https://github.com/giuseppecastaldo/ha-addons/tree/main) for upstream changes.
-
-
-** Buy Me a Coffee – Original Author: **
-
+Buy Me a Coffee – Original Author:
 [![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
 
-
-Original Repo:
-
-https://github.com/giuseppecastaldo/ha-addons/tree/main
+Buy Me a Coffee – Maintainer:
+[![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
 
 # Home Assistant Add-on: Whatsapp add-on
 
@@ -51,11 +43,6 @@ whatsapp:
 Then restart Home Assistant again. If all went well you will see a _whatsapp.send_message_ service in Home Assistant.
 
 ---
+
 **Support & Issues:**  
 For support, feature requests or bug reports, please visit the [GitHub repository](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon).
-
-We welcome community contributions and feedback!
-
-Buy Me a Coffee – Maintainer:
-
-[![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)

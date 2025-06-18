@@ -1,36 +1,34 @@
 ## 1.6.0
 
  - Integrated Baileys library as an npm dependency and removed the local copy.
- - Messaging to WhatsApp groups (@g.us) works again.
- - Fix based on community insights from GitHub Issue #113 and tips by @ShaylenIT & @arormoser.
-
+ 
 ## 1.5.6
 
- - Updated event handling for new_whatsapp_message
+ - changed new_whatsapp_message event
+   simple usage of trigger.event.data.body
 
 ## 1.5.5
 
- - Extended logging.
+ - extendet logging 
 
 ## 1.5.4
 
- - Corrected & Extended Readme.
- - Extended the docs.md.
+ - Corrected & Extended Readme
+ - Extended the docs.md 
    
 ## 1.5.3
 
- - Several code changes;
- 
+ - serval codechanges
+
+   
 ## 1.5.2
 
- - Updated local Baileys.
+ - updated Baylies
 
 ## 1.5.1
 
- - Updated config.yaml.
- - Updated index.js.
- - Fix based on community insights from GitHub Issue #113 and tips by @ShaylenIT & @arormoser.
-
+- updated config.yaml -> media:rw
+- Updated index.js
 
 ## 1.5.0
 
