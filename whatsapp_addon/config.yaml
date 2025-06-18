@@ -14,7 +14,7 @@ arch:
   - i386
 init: false
 map:
-  - "homeassistant_config:rw"
+  - "config:rw"
   - "media:rw"
 options:
   clients:
