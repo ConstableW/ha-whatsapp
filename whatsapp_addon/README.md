@@ -1,8 +1,7 @@
 Buy Me a Coffee – Original Author:
 [![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
 
-Buy Me a Coffee – Maintainer:
-[![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
+
 
 # Home Assistant Add-on: Whatsapp add-on
 
@@ -46,3 +45,7 @@ Then restart Home Assistant again. If all went well you will see a _whatsapp.sen
 
 **Support & Issues:**  
 For support, feature requests or bug reports, please visit the [GitHub repository](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon).
+
+
+Buy Me a Coffee – Maintainer:
+[![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
