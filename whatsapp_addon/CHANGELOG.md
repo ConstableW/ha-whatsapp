@@ -6,6 +6,7 @@
  - Fix based on community insights from GitHub Issue #113 and tips by @ShaylenIT & @arormoser.
 
 
+
 ## 1.5.0
 
 - Updated whatsapp library
