@@ -62,7 +62,7 @@ const onQr = (qr, key) => {
         "http://supervisor/core/api/services/persistent_notification/create",
         {
           title: `Whatsapp QRCode (${key})`,
-          message: `Scanne den QR-Code für ${key} unter /local/${fileName}`,
+          message: `**Scanne diesen QR-Code für ${key}:**\n\n![QRCode](${fileUrl}?v=${Date.now()})`,
           notification_id: `whatsapp_addon_qrcode_${key}`,
         },
         { headers: { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` } }
