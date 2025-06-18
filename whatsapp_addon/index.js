@@ -32,7 +32,7 @@ const onReady = (key) => {
 const onQr = (qr, key) => {
   logger.info(`[${key}] QR-Code erforderlich, siehe Benachrichtigungen.`);
 
-  const wwwDir = '/homeassistant/www';
+  const wwwDir = '/config/www';
   if (!fs.existsSync(wwwDir)) {
     try {
       fs.mkdirSync(wwwDir, { recursive: true });
