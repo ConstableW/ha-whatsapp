@@ -1,4 +1,4 @@
-## 1.7.0
+## 2.0.0
 
  - New **WhatsApp panel** in the sidebar (Ingress): add, rename, enable/disable, connect/disconnect, re-authenticate and remove clients without restarting the add-on, QR pairing dialog, client details with groups and event log.
  - Real session states from Baileys events; a logout is shown as "authentication invalid" and is no longer re-paired automatically. No invented expiry times.
