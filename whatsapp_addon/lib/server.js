@@ -36,7 +36,7 @@ const createApp = ({
   info = {},
 }) => {
   const app = express();
-  const startedAt = Date.now();
+  const startedAt = info.startedAt || Date.now();
   const allowed = new Set(adminIps.map(normalizeIp));
 
   // Exposed so the resolved Supervisor addresses can be added at runtime.

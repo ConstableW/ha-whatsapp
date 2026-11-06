@@ -1,11 +1,9 @@
 Buy Me a Coffee – Original Author:
 [![Buy Me a Coffee – Original Author](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/zkfpkdwyhyq)
 
-
-
 # Home Assistant Add-on: Whatsapp add-on
 
-_Write your Whatsapp message from Home Assistant_
+_Send and receive WhatsApp messages from Home Assistant – with a management panel in the sidebar._
 
 <img src="https://github.com/ConstableW/ha-whatsapp/blob/main/whatsapp_addon/logo.png?raw=true" width="400"/>
 
@@ -21,31 +19,40 @@ _Write your Whatsapp message from Home Assistant_
 [armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
 [i386-shield]: https://img.shields.io/badge/i386-yes-green.svg
 
-A WhatsApp API client that connects through the WhatsApp Web browser app
+A WhatsApp API client that connects as a linked device (like WhatsApp Web).
 
 **NOTE:** I can't guarantee you will not be blocked by using this method, although it has worked for me. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.
 
-# Installation guide
+![The WhatsApp panel in Home Assistant](https://raw.githubusercontent.com/ConstableW/ha-whatsapp/main/docs/images/panel-overview.png)
 
-Install add-on from this repository:
+_Screenshots show made-up demo data._
 
-https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon
+## Features
 
+- Services to send text, images, audio, locations and reactions to users and groups.
+- Events for received messages (with the group name) and presence updates.
+- Management panel in the sidebar: add, rename, enable/disable, connect/disconnect, re-authenticate and remove clients without restarting the add-on.
+- Several WhatsApp numbers side by side, real session states, persistent counters, list of groups.
+- Status updates (stories) do not trigger message automations.
 
-Start the add-on and in a few seconds you will see a persistent notification with QRCode, please scan this one with Whatsapp Mobile app.
+## Installation guide
 
-After add-on installation, restart Home Assistant and then copy the following code in _configuration.yaml_:
+1. Install and **start** this add-on. It copies its integration to `/config/custom_components/whatsapp`.
+2. **Restart Home Assistant**, then add this to `configuration.yaml`:
 
-whatsapp:
+   ```yaml
+   whatsapp:
+   ```
 
+3. **Restart Home Assistant again.** You will now see the service `whatsapp.send_message`.
+4. Open **WhatsApp** in the sidebar, click **Show QR code** for the client `default` and scan it with the WhatsApp mobile app (_Settings → Linked devices → Link a device_).
 
-Then restart Home Assistant again. If all went well you will see a _whatsapp.send_message_ service in Home Assistant.
+Restart Home Assistant once after each add-on update. The **Documentation** tab describes the panel, all services and events, and troubleshooting.
 
 ---
 
-**Support & Issues:**  
+**Support & Issues:**
 For support, feature requests or bug reports, please visit the [GitHub repository](https://github.com/ConstableW/ha-whatsapp/tree/main/whatsapp_addon).
-
 
 Buy Me a Coffee – Maintainer:
 [![Buy Me a Coffee – Maintainer](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/constablew)
