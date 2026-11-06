@@ -109,3 +109,13 @@ send_infinity_presence_update:
       description: Target User ID
       required: false
       example: 391234567890@s.whatsapp.net
+
+get_groups:
+  name: Get groups
+  description: Returns all groups the client is a member of (id, subject, participants). Use it with "response_variable".
+  fields:
+    clientId:
+      name: Client ID
+      description: Which instance of whatsapp should be used
+      required: true
+      example: default

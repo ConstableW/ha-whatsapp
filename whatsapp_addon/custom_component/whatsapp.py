@@ -17,7 +17,7 @@ class WhatsappError(HomeAssistantError):
 
 
 class Whatsapp:
-    def _post(self, endpoint, data):
+    def _post(self, endpoint, data, want_json=False):
         url = f"{HOST.rstrip('/')}/{endpoint.lstrip('/')}"
         try:
             response = requests.post(url, json=dict(data), timeout=30)
@@ -25,6 +25,12 @@ class Whatsapp:
             raise WhatsappError(
                 f"WhatsApp add-on is not reachable ({endpoint}): {err}"
             ) from err
+
+        if want_json and response.status_code < 400:
+            try:
+                return response.json()
+            except ValueError as err:
+                raise WhatsappError(f"WhatsApp {endpoint} returned invalid data") from err
 
         if response.status_code < 400 and response.text.strip() == 'OK':
             return True
@@ -47,3 +53,6 @@ class Whatsapp:
 
     def send_infinity_presence_update(self, data):
         return self._post('sendInfinityPresenceUpdate', data)
+
+    def get_groups(self, data):
+        return self._post('getGroups', data, want_json=True)

@@ -11,3 +11,12 @@ configuration:
     description: >-
       WhatsApp-Status-Updates als new_whatsapp_message-Event weiterleiten.
       Standardmäßig aus, damit Status keine Nachrichten-Automationen auslösen.
+  disabled_clients:
+    name: Deaktivierte Clients
+    description: Wird im WhatsApp-Panel verwaltet. Hier aufgeführte Clients werden nicht verbunden.
+  client_labels:
+    name: Anzeigenamen der Clients
+    description: Wird im WhatsApp-Panel verwaltet. Format id=Anzeigename.
+  inactivity_warning_days:
+    name: Inaktivitätswarnung (Tage)
+    description: Zeigt im WhatsApp-Panel eine Warnung, wenn ein Client so viele Tage keine Verbindung hatte. 0 schaltet sie aus.

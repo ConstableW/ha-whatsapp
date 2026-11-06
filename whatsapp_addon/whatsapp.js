@@ -1,4 +1,6 @@
 const EventEmitter = require("eventemitter2");
+const fs = require("fs");
+const path = require("path");
 
 const {
   makeWASocket,
@@ -6,7 +8,6 @@ const {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
 } = require("@whiskeysockets/baileys");
-
 
 const MessageType = {
   text: "conversation",
@@ -34,16 +35,47 @@ const shouldForward = (msg, { receiveStatus = false } = {}) => {
   return Object.keys(msg.message).some((k) => !IGNORED_MESSAGE_TYPES.has(k));
 };
 
+// Human readable name of a Baileys disconnect status code.
+const reasonName = (code) => {
+  const entry = Object.entries(DisconnectReason).find(([, v]) => v === code);
+  return entry ? entry[0] : code === undefined ? "unknown" : String(code);
+};
+
+// Reads the paired account (phone number / name) from stored credentials.
+const readAccount = (dir) => {
+  try {
+    const creds = JSON.parse(
+      fs.readFileSync(path.join(dir, "creds.json"), "utf8")
+    );
+    if (!creds.me || !creds.me.id) return null;
+    return {
+      phone: creds.me.id.split(":")[0].split("@")[0],
+      name: creds.me.name || null,
+    };
+  } catch (e) {
+    return null;
+  }
+};
+
+const GROUP_CACHE_MS = 10 * 60 * 1000;
+const GROUP_LOOKUP_TIMEOUT_MS = 5000;
+
 class WhatsappClient extends EventEmitter {
   #conn;
   #path;
   #refreshInterval;
   #sendPresenceUpdateInterval;
+  #reconnectTimer;
   #timeout;
   #attempts;
   #offline;
   #refreshMs;
   #receiveStatus;
+  #stopped = false;
+  #connecting = false;
+  #planned = false;
+  #groupNames = new Map(); // jid -> { subject, at }
+  #groupList = null; // { at, list }
 
   #status = {
     attempt: 0,
@@ -61,46 +93,126 @@ class WhatsappClient extends EventEmitter {
     offline = true,
     refreshMs,
     receiveStatus = false,
+    autoStart = true,
   }) {
     super();
     this.#path = path;
-    this.#receiveStatus = !!receiveStatus;
     this.#timeout = timeout;
     this.#attempts = attempts;
     this.#offline = offline;
     this.#refreshMs = refreshMs || this.#toMilliseconds(6, 0, 0);
-    this.connect().catch((err) => this.emit("error", err));
+    this.#receiveStatus = !!receiveStatus;
+    if (autoStart) this.start();
   }
 
+  setReceiveStatus = (value) => {
+    this.#receiveStatus = !!value;
+  };
+
+  get connected() {
+    return this.#status.connected;
+  }
+
+  get stopped() {
+    return this.#stopped;
+  }
+
+  getAccount = () => {
+    const me = this.#conn?.authState?.creds?.me;
+    if (me && me.id) {
+      return {
+        phone: me.id.split(":")[0].split("@")[0],
+        name: me.name || null,
+      };
+    }
+    return readAccount(this.#path);
+  };
+
+  start = () => {
+    this.#stopped = false;
+    this.#status.disconnected = false;
+    this.#status.attempt = 0;
+    return this.connect().catch((err) => this.emit("error", err));
+  };
+
   connect = async () => {
-    if (this.#status.connected) return;
+    if (this.#status.connected || this.#connecting || this.#stopped) return;
+    this.#connecting = true;
 
-    const { version } = await fetchLatestBaileysVersion();
-    const { state, saveCreds } = await useMultiFileAuthState(this.#path);
+    try {
+      this.emit("connecting");
 
-    this.#conn = makeWASocket({
-      version,
-      auth: state,
-      syncFullHistory: false,
-      markOnlineOnConnect: !this.#offline,
-      logger: require("pino")({ level: "silent" }),
-      generateHighQualityLinkPreview: true,
-      browser: ["Ubuntu", "Chrome", "20.0.04"],
-      defaultQueryTimeoutMs: undefined,
-    });
+      const { version } = await fetchLatestBaileysVersion();
+      const { state, saveCreds } = await useMultiFileAuthState(this.#path);
+      if (this.#stopped) return;
 
-    this.#conn.ev.on("creds.update", (state) => {
-      if (state.me) {
-        this.emit("pair", {
-          phone: state.me.id.split(":")[0],
-          name: state.me.name,
-        });
-      }
+      const conn = makeWASocket({
+        version,
+        auth: state,
+        syncFullHistory: false,
+        markOnlineOnConnect: !this.#offline,
+        logger: require("pino")({ level: "silent" }),
+        generateHighQualityLinkPreview: true,
+        browser: ["Ubuntu", "Chrome", "20.0.04"],
+        defaultQueryTimeoutMs: undefined,
+      });
+      this.#conn = conn;
 
-      saveCreds(state);
-    });
+      // Events of an old socket must never influence the current one.
+      const current = (fn) => (...args) => {
+        if (conn === this.#conn) fn(...args);
+      };
 
-    this.#conn.ev.on("connection.update", this.#onConnectionUpdate);
+      conn.ev.on(
+        "creds.update",
+        current((update) => {
+          if (update && update.me) {
+            this.emit("pair", {
+              phone: update.me.id.split(":")[0].split("@")[0],
+              name: update.me.name,
+            });
+          }
+          saveCreds();
+        })
+      );
+
+      conn.ev.on("connection.update", current(this.#onConnectionUpdate));
+    } finally {
+      this.#connecting = false;
+    }
+  };
+
+  // Permanently closes the connection without reconnecting (until start()).
+  stop = () => {
+    this.#stopped = true;
+    this.#status.connected = false;
+    this.#status.disconnected = true;
+    this.#status.reconnecting = false;
+
+    clearInterval(this.#refreshInterval);
+    clearTimeout(this.#reconnectTimer);
+    this.setSendPresenceUpdateInterval();
+
+    const conn = this.#conn;
+    this.#conn = undefined;
+    try {
+      conn?.end(undefined);
+    } catch (e) {
+      // socket already closed
+    }
+    this.emit("stopped");
+  };
+
+  // Unlinks this device from WhatsApp (best effort) and stops the client.
+  logout = async () => {
+    const conn = this.#conn;
+    this.#stopped = true;
+    try {
+      if (conn && this.#status.connected) await conn.logout();
+    } catch (e) {
+      // not connected / already logged out
+    }
+    this.stop();
   };
 
   disconnect = (reconnect) => {
@@ -110,10 +222,11 @@ class WhatsappClient extends EventEmitter {
     this.#status.disconnected = !reconnect;
     this.#status.reconnecting = !!reconnect;
 
-    return this.#conn?.end();
+    return this.#conn?.end(undefined);
   };
 
   restart = () => {
+    this.#planned = true;
     this.emit("restart");
     return this.disconnect(true);
   };
@@ -132,13 +245,17 @@ class WhatsappClient extends EventEmitter {
   };
 
   #reconnect = () => {
+    if (this.#stopped) return;
     if (this.#status.attempt++ > this.#attempts || this.#status.disconnected) {
       this.#status.reconnecting = false;
       this.#status.disconnected = true;
       return;
     }
 
-    setTimeout(() => {
+    clearTimeout(this.#reconnectTimer);
+    this.#reconnectTimer = setTimeout(() => {
+      if (this.#stopped) return;
+      this.emit("reconnecting", this.#status.attempt);
       this.connect().catch((err) => {
         this.emit("error", err);
         this.#reconnect();
@@ -161,22 +278,44 @@ class WhatsappClient extends EventEmitter {
     this.#status.connected = true;
     this.#status.disconnected = false;
     this.#status.reconnecting = false;
+    this.#planned = false;
 
+    clearInterval(this.#refreshInterval);
     this.#refreshInterval = setInterval(() => this.restart(), this.#refreshMs);
     if (this.#offline) this.setSendPresenceUpdateInterval("unavailable");
 
-    this.#conn.ev.on("messages.upsert", async ({ messages }) => {
+    const conn = this.#conn;
+
+    conn.ev.on("messages.upsert", async ({ messages }) => {
       for (const msg of messages) {
         if (shouldForward(msg, { receiveStatus: this.#receiveStatus })) {
           delete msg.message.messageContextInfo;
           const messageType = Object.keys(msg.message)[0];
-          this.emit("msg", { type: messageType, ...msg });
+          const payload = { type: messageType, ...msg };
+
+          const jid = msg.key.remoteJid;
+          if (typeof jid === "string" && jid.endsWith("@g.us")) {
+            const groupName = await this.#groupName(jid);
+            if (groupName) payload.groupName = groupName;
+          }
+
+          this.emit("msg", payload);
         }
       }
     });
 
-    this.#conn.ev.on("presence.update", (presence) => {
+    conn.ev.on("presence.update", (presence) => {
       this.emit("presence_update", presence);
+    });
+
+    conn.ev.on("groups.upsert", (groups) => {
+      for (const g of groups || []) this.#rememberGroup(g.id, g.subject);
+    });
+
+    conn.ev.on("groups.update", (updates) => {
+      for (const g of updates || []) {
+        if (g.id && g.subject) this.#rememberGroup(g.id, g.subject);
+      }
     });
 
     this.emit("ready");
@@ -188,6 +327,8 @@ class WhatsappClient extends EventEmitter {
     clearInterval(this.#refreshInterval);
     this.setSendPresenceUpdateInterval();
 
+    if (this.#stopped) return;
+
     const statusCode = lastDisconnect?.error?.output?.statusCode;
 
     if (statusCode === DisconnectReason.loggedOut) {
@@ -198,7 +339,18 @@ class WhatsappClient extends EventEmitter {
       return;
     }
 
-    this.emit("disconnected", statusCode);
+    // The scheduled refresh restart and the restart WhatsApp requires right
+    // after pairing are not connection losses.
+    if (this.#planned || statusCode === DisconnectReason.restartRequired) {
+      this.#planned = false;
+    } else {
+      this.emit("disconnected", {
+        code: statusCode,
+        reason: reasonName(statusCode),
+        message: lastDisconnect?.error?.message,
+      });
+    }
+
     this.#reconnect();
   };
 
@@ -216,11 +368,74 @@ class WhatsappClient extends EventEmitter {
     }
   };
 
-  sendMessage = async (phone, msg, options) => {
-    phone = phone.toString();
+  #rememberGroup = (jid, subject) => {
+    if (jid && subject) this.#groupNames.set(jid, { subject, at: Date.now() });
+  };
+
+  #groupName = async (jid) => {
+    const cached = this.#groupNames.get(jid);
+    if (cached && Date.now() - cached.at < GROUP_CACHE_MS) {
+      return cached.subject;
+    }
+
+    try {
+      const meta = await Promise.race([
+        this.#conn.groupMetadata(jid),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("group lookup timed out")),
+            GROUP_LOOKUP_TIMEOUT_MS
+          ).unref()
+        ),
+      ]);
+      this.#rememberGroup(jid, meta?.subject);
+      return meta?.subject;
+    } catch (err) {
+      return cached ? cached.subject : undefined;
+    }
+  };
+
+  #assertConnected = () => {
     if (this.#status.disconnected || !this.#status.connected) {
       throw new WhatsappDisconnectedError();
     }
+  };
+
+  // All groups this account participates in (cached for a minute).
+  getGroups = async ({ refresh = false } = {}) => {
+    this.#assertConnected();
+
+    if (!refresh && this.#groupList && Date.now() - this.#groupList.at < 60000) {
+      return this.#groupList.list;
+    }
+
+    let all;
+    try {
+      all = await this.#conn.groupFetchAllParticipating();
+    } catch (err) {
+      throw toWhatsappError(err);
+    }
+
+    const list = Object.values(all || {})
+      .map((g) => {
+        this.#rememberGroup(g.id, g.subject);
+        return {
+          id: g.id,
+          subject: g.subject || "",
+          participants: Array.isArray(g.participants)
+            ? g.participants.length
+            : g.size || 0,
+        };
+      })
+      .sort((a, b) => a.subject.localeCompare(b.subject));
+
+    this.#groupList = { at: Date.now(), list };
+    return list;
+  };
+
+  sendMessage = async (phone, msg, options) => {
+    phone = phone.toString();
+    this.#assertConnected();
 
     // A plain string is shorthand for a text message.
     if (typeof msg === "string") msg = { text: msg };
@@ -252,9 +467,7 @@ class WhatsappClient extends EventEmitter {
   }
 
   sendPresenceUpdate = async (type, id) => {
-    if (this.#status.disconnected || !this.#status.connected) {
-      throw new WhatsappDisconnectedError();
-    }
+    this.#assertConnected();
 
     try {
       await this.#conn.sendPresenceUpdate(type, id);
@@ -264,9 +477,7 @@ class WhatsappClient extends EventEmitter {
   };
 
   presenceSubscribe = async (phone) => {
-    if (this.#status.disconnected || !this.#status.connected) {
-      throw new WhatsappDisconnectedError();
-    }
+    this.#assertConnected();
 
     const id = this.#toId(phone);
 
@@ -284,9 +495,7 @@ class WhatsappClient extends EventEmitter {
   };
 
   updateProfileStatus = async (status) => {
-    if (this.#status.disconnected || !this.#status.connected) {
-      throw new WhatsappDisconnectedError();
-    }
+    this.#assertConnected();
 
     try {
       await this.#conn.updateProfileStatus(status);
@@ -342,4 +551,10 @@ class WhatsappError extends Error {
   }
 }
 
-module.exports = { WhatsappClient, MessageType, shouldForward };
+module.exports = {
+  WhatsappClient,
+  MessageType,
+  shouldForward,
+  readAccount,
+  reasonName,
+};

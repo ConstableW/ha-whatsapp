@@ -10,3 +10,12 @@ configuration:
     description: >-
       Forward WhatsApp status updates (stories) as new_whatsapp_message events.
       Disabled by default so statuses do not trigger message automations.
+  disabled_clients:
+    name: Disabled clients
+    description: Managed by the WhatsApp panel. Clients listed here are not connected.
+  client_labels:
+    name: Client display names
+    description: Managed by the WhatsApp panel. Format id=Display name.
+  inactivity_warning_days:
+    name: Inactivity warning (days)
+    description: Show a warning in the WhatsApp panel when a client had no connection for this many days. 0 turns it off.

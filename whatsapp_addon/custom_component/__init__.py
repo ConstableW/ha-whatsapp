@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,6 +56,12 @@ PRESENCE_UPDATE_SCHEMA = vol.Schema(
 )
 
 
+GET_GROUPS_SCHEMA = vol.Schema(
+    {**_BASE, vol.Optional("refresh"): cv.boolean},
+    extra=vol.ALLOW_EXTRA,
+)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     whatsapp = Whatsapp()
 
@@ -89,6 +95,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "send_infinity_presence_update",
         _handler(whatsapp.send_infinity_presence_update),
         schema=PRESENCE_UPDATE_SCHEMA,
+    )
+
+    async def get_groups(call: ServiceCall) -> dict:
+        return await hass.async_add_executor_job(whatsapp.get_groups, dict(call.data))
+
+    hass.services.async_register(
+        DOMAIN,
+        "get_groups",
+        get_groups,
+        schema=GET_GROUPS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
     )
 
     return True
