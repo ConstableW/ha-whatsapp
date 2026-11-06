@@ -50,7 +50,7 @@ class WhatsappClient extends EventEmitter {
     this.#attempts = attempts;
     this.#offline = offline;
     this.#refreshMs = refreshMs || this.#toMilliseconds(6, 0, 0);
-    this.connect();
+    this.connect().catch((err) => this.emit("error", err));
   }
 
   connect = async () => {
@@ -91,7 +91,7 @@ class WhatsappClient extends EventEmitter {
     this.#status.disconnected = !reconnect;
     this.#status.reconnecting = !!reconnect;
 
-    return this.#conn.end();
+    return this.#conn?.end();
   };
 
   restart = () => {
@@ -119,7 +119,12 @@ class WhatsappClient extends EventEmitter {
       return;
     }
 
-    setTimeout(this.connect, this.#timeout);
+    setTimeout(() => {
+      this.connect().catch((err) => {
+        this.emit("error", err);
+        this.#reconnect();
+      });
+    }, this.#timeout);
   };
 
   #onConnectionUpdate = (event) => {
@@ -142,12 +147,12 @@ class WhatsappClient extends EventEmitter {
     if (this.#offline) this.setSendPresenceUpdateInterval("unavailable");
 
     this.#conn.ev.on("messages.upsert", async ({ messages }) => {
-      const msg = messages[0];
-
-      if (msg.hasOwnProperty("message") && !msg.key.fromMe) {
-        delete msg.message.messageContextInfo;
-        const messageType = Object.keys(msg.message)[0];
-        this.emit("msg", { type: messageType, ...msg });
+      for (const msg of messages) {
+        if (msg.message && !msg.key.fromMe) {
+          delete msg.message.messageContextInfo;
+          const messageType = Object.keys(msg.message)[0];
+          this.emit("msg", { type: messageType, ...msg });
+        }
       }
     });
 
@@ -182,19 +187,13 @@ class WhatsappClient extends EventEmitter {
     clearInterval(this.#sendPresenceUpdateInterval);
 
     if (status) {
-      try {
-        this.sendPresenceUpdate(status, id);
-      } catch (err) {
-        clearInterval(this.#sendPresenceUpdateInterval);
-      }
-
-      this.#sendPresenceUpdateInterval = setInterval(() => {
-        try {
-          this.sendPresenceUpdate(status, id);
-        } catch (err) {
+      const send = () =>
+        this.sendPresenceUpdate(status, id).catch(() => {
           clearInterval(this.#sendPresenceUpdateInterval);
-        }
-      }, 10000);
+        });
+
+      send();
+      this.#sendPresenceUpdateInterval = setInterval(send, 10000);
     }
   };
 
@@ -217,7 +216,7 @@ class WhatsappClient extends EventEmitter {
       try {
         return await this.#conn.sendMessage(id, msg, options);
       } catch (err) {
-        throw new WhatsappError(err.output.payload.statusCode);
+        throw toWhatsappError(err);
       }
     }
 
@@ -238,7 +237,7 @@ class WhatsappClient extends EventEmitter {
     try {
       await this.#conn.sendPresenceUpdate(type, id);
     } catch (err) {
-      throw new WhatsappError(err.output.payload.statusCode);
+      throw toWhatsappError(err);
     }
   };
 
@@ -255,7 +254,7 @@ class WhatsappClient extends EventEmitter {
       try {
         await this.#conn.presenceSubscribe(id);
       } catch (err) {
-        throw new WhatsappError(err.output.payload.statusCode);
+        throw toWhatsappError(err);
       }
     } else {
       throw new WhatsappNumberNotFoundError(phone);
@@ -270,10 +269,17 @@ class WhatsappClient extends EventEmitter {
     try {
       await this.#conn.updateProfileStatus(status);
     } catch (err) {
-      throw new WhatsappError(err.output.payload.statusCode);
+      throw toWhatsappError(err);
     }
   };
 }
+
+const toWhatsappError = (err) => {
+  if (err instanceof WhatsappError) return err;
+  const code = err?.output?.payload?.statusCode;
+  if (code !== undefined) return new WhatsappError(code);
+  return err instanceof Error ? err : new Error(String(err));
+};
 
 class WhatsappNumberNotFoundError extends Error {
   constructor(phone = "", ...args) {
@@ -296,9 +302,8 @@ class WhatsappDisconnectedError extends Error {
 class WhatsappError extends Error {
   #errors = {
     428: "Connection Closed",
-    408: "Connection Lost",
+    408: "Connection Lost / Timed Out",
     440: "Connection Replaced",
-    408: "Timed Out",
     401: "Logged Out",
     500: "Bad Session",
     515: "Restart Required",

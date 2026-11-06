@@ -19,19 +19,22 @@ app.use(bodyParser.json());
 
 const clients = {};
 
-const onReady = (key) => {
-  logger.info(key, "client is ready.");
-  axios.post(
-    "http://supervisor/core/api/services/persistent_notification/dismiss",
-    {
-      notification_id: `whatsapp_addon_qrcode_${key}`,
-    },
-    {
+const supervisorPost = (path, data) =>
+  axios
+    .post(`http://supervisor/core/api/${path}`, data, {
       headers: {
         Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
       },
-    }
-  );
+    })
+    .catch((error) => {
+      logger.error(`Request to supervisor (${path}) failed: ${error.message}`);
+    });
+
+const onReady = (key) => {
+  logger.info(key, "client is ready.");
+  supervisorPost("services/persistent_notification/dismiss", {
+    notification_id: `whatsapp_addon_qrcode_${key}`,
+  });
 };
 
 const onQr = (qr, key) => {
@@ -40,57 +43,39 @@ const onQr = (qr, key) => {
     "require authentication over QRCode, please see your notifications..."
   );
 
-  var code = qrimage.image(qr, { type: "png" });
+  const chunks = [];
+  const code = qrimage.image(qr, { type: "png" });
 
-  code.on("readable", function () {
-    var img_string = code.read().toString("base64");
-    axios.post(
-      "http://supervisor/core/api/services/persistent_notification/create",
-      {
-        title: `Whatsapp QRCode (${key})`,
-        message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
-        notification_id: `whatsapp_addon_qrcode_${key}`,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
-        },
-      }
-    );
+  code.on("data", (chunk) => chunks.push(chunk));
+  code.on("end", () => {
+    const img_string = Buffer.concat(chunks).toString("base64");
+    supervisorPost("services/persistent_notification/create", {
+      title: `Whatsapp QRCode (${key})`,
+      message: `Please scan the following QRCode for **${key}** client... ![QRCode](data:image/png;base64,${img_string})`,
+      notification_id: `whatsapp_addon_qrcode_${key}`,
+    });
   });
 };
 
 const onMsg = (msg, key) => {
-  axios.post(
-    "http://supervisor/core/api/events/new_whatsapp_message",
-    { clientId: key, ...msg },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
-      },
-    }
-  );
+  supervisorPost("events/new_whatsapp_message", { clientId: key, ...msg });
   logger.debug(`New message event fired from ${key}.`);
 };
 
 const onPresenceUpdate = (presence, key) => {
-  axios.post(
-    "http://supervisor/core/api/events/whatsapp_presence_update",
-    { clientId: key, ...presence },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
-      },
-    }
-  );
+  supervisorPost("events/whatsapp_presence_update", {
+    clientId: key,
+    ...presence,
+  });
   logger.debug(`New presence event fired from ${key}.`);
 };
 
-const onLogout = async (key) => {
+const onLogout = (key) => {
   logger.info(`Client ${key} was logged out. Restarting...`);
-  fs.rm(`/data/${key}`, { recursive: true });
-
-  init(key);
+  fs.rm(`/data/${key}`, { recursive: true, force: true }, (error) => {
+    if (error) logger.error(`Could not remove session of ${key}: ${error.message}`);
+    init(key);
+  });
 };
 
 const init = (key) => {
@@ -100,146 +85,95 @@ const init = (key) => {
   clients[key].on("qr", (qr) => onQr(qr, key));
   clients[key].once("ready", () => onReady(key));
   clients[key].on("msg", (msg) => onMsg(msg, key));
-  clients[key].on("logout", () => onLogout(key));
+  clients[key].once("logout", () => onLogout(key));
   clients[key].on("presence_update", (presence) =>
     onPresenceUpdate(presence, key)
   );
+  clients[key].on("error", (error) =>
+    logger.error(`${key} client error: ${error.message}`)
+  );
+};
+
+// Registers a POST route that resolves the client from the request body,
+// validates the required fields and runs `action(wapp, body)`.
+const route = (name, required, action) => {
+  app.post(`/${name}`, (req, res) => {
+    const body = req.body || {};
+
+    if (!Object.prototype.hasOwnProperty.call(body, "clientId")) {
+      logger.error(`Error in ${name}. Please specify client ID.`);
+      return res.status(400).send("KO");
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(clients, body.clientId)) {
+      logger.error(`Error in ${name}. Client ID not found.`);
+      return res.status(404).send("KO");
+    }
+
+    const missing = required.filter(
+      (field) => body[field] === undefined || body[field] === null
+    );
+    if (missing.length) {
+      logger.error(`Error in ${name}. Missing field(s): ${missing.join(", ")}.`);
+      return res.status(400).send("KO");
+    }
+
+    Promise.resolve()
+      .then(() => action(clients[body.clientId], body))
+      .then(() => {
+        res.send("OK");
+        logger.debug(`${name} successful.`);
+      })
+      .catch((error) => {
+        logger.error(`${name} failed: ${error.message}`);
+        res.status(500).send("KO");
+      });
+  });
 };
 
 fs.readFile("data/options.json", function (error, content) {
-  var options = JSON.parse(content);
+  if (error) {
+    logger.fatal(`Cannot read options.json: ${error.message}`);
+    process.exit(1);
+  }
 
-  options.clients.forEach((key) => {
+  let options;
+  try {
+    options = JSON.parse(content);
+  } catch (e) {
+    logger.fatal(`Invalid options.json: ${e.message}`);
+    process.exit(1);
+  }
+
+  (options.clients || []).forEach((key) => {
     init(key);
   });
 
+  route("sendMessage", ["to", "body"], (wapp, b) =>
+    wapp.sendMessage(b.to, b.body, b.options)
+  );
+
+  route("setStatus", ["status"], (wapp, b) => wapp.updateProfileStatus(b.status));
+
+  route("presenceSubscribe", [], (wapp, b) => {
+    const target = b.to !== undefined ? b.to : b.userId;
+    if (target === undefined || target === null) {
+      throw new Error("Missing field: to");
+    }
+    return wapp.presenceSubscribe(target);
+  });
+
+  route("sendPresenceUpdate", ["type"], (wapp, b) =>
+    wapp.sendPresenceUpdate(b.type, b.to)
+  );
+
+  route("sendInfinityPresenceUpdate", ["type"], (wapp, b) =>
+    wapp.setSendPresenceUpdateInterval(b.type, b.to)
+  );
+
   app.listen(port, () => logger.info(`Whatsapp Addon started.`));
+});
 
-  app.post("/sendMessage", (req, res) => {
-    const message = req.body;
-    if (message.hasOwnProperty("clientId")) {
-      if (clients.hasOwnProperty(message.clientId)) {
-        const wapp = clients[message.clientId];
-        wapp
-          .sendMessage(message.to, message.body, message.options)
-          .then(() => {
-            res.send("OK");
-            logger.debug("Message successfully sended from addon.");
-          })
-          .catch((error) => {
-            res.send("KO");
-            logger.error(error.message);
-          });
-      } else {
-        logger.error("Error in sending message. Client ID not found.");
-        res.send("KO");
-      }
-    } else {
-      logger.error("Error in sending message. Please specify client ID.");
-      res.send("KO");
-    }
-  });
-
-  app.post("/setStatus", (req, res) => {
-    const status = req.body.status;
-    if (req.body.hasOwnProperty("clientId")) {
-      if (clients.hasOwnProperty(req.body.clientId)) {
-        const wapp = clients[req.body.clientId];
-
-        wapp
-          .updateProfileStatus(status)
-          .then(() => {
-            res.send("OK");
-          })
-          .catch((error) => {
-            res.send("KO");
-            logger.error(error.message);
-          });
-      } else {
-        logger.error("Error in set status. Client ID not found.");
-        res.send("KO");
-      }
-    } else {
-      logger.error("Error in set status. Please specify client ID.");
-      res.send("KO");
-    }
-  });
-
-  app.post("/presenceSubscribe", (req, res) => {
-    const request = req.body;
-
-    if (req.body.hasOwnProperty("clientId")) {
-      if (clients.hasOwnProperty(req.body.clientId)) {
-        const wapp = clients[req.body.clientId];
-
-        wapp
-          .presenceSubscribe(request.userId)
-          .then(() => {
-            res.send("OK");
-          })
-          .catch((error) => {
-            res.send("KO");
-            logger.error(error.message);
-          });
-      } else {
-        logger.error("Error in subscribe presence. Client ID not found.");
-        res.send("KO");
-      }
-    } else {
-      logger.error("Error in subscribe presence. Please specify client ID.");
-      res.send("KO");
-    }
-  });
-
-  app.post("/sendPresenceUpdate", (req, res) => {
-    const request = req.body;
-
-    if (req.body.hasOwnProperty("clientId")) {
-      if (clients.hasOwnProperty(req.body.clientId)) {
-        const wapp = clients[req.body.clientId];
-
-        wapp
-          .sendPresenceUpdate(request.type, request.to)
-          .then(() => {
-            res.send("OK");
-          })
-          .catch((error) => {
-            res.send("KO");
-            logger.error(error.message);
-          });
-      } else {
-        logger.error("Error in presence update. Client ID not found.");
-        res.send("KO");
-      }
-    } else {
-      logger.error("Error in presence update. Please specify client ID.");
-      res.send("KO");
-    }
-  });
-
-  app.post("/sendInfinityPresenceUpdate", (req, res) => {
-    const request = req.body;
-
-    if (req.body.hasOwnProperty("clientId")) {
-      if (clients.hasOwnProperty(req.body.clientId)) {
-        const wapp = clients[req.body.clientId];
-
-        wapp
-          .setSendPresenceUpdateInterval(request.type, request.to)
-          .then(() => {
-            res.send("OK");
-          })
-          .catch((error) => {
-            res.send("KO");
-            logger.error(error.message);
-          });
-      } else {
-        logger.error("Error in presence update. Client ID not found.");
-        res.send("KO");
-      }
-    } else {
-      logger.error("Error in presence update. Please specify client ID.");
-      res.send("KO");
-    }
-  });
+process.on("unhandledRejection", (reason) => {
+  logger.error(`Unhandled rejection: ${reason && reason.message ? reason.message : reason}`);
 });

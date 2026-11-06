@@ -3,6 +3,8 @@ name: CI
 
 # yamllint disable-line rule:truthy
 on:
+  push:
+  pull_request:
   workflow_call:
     inputs:
       slug:
@@ -35,7 +37,7 @@ jobs:
           if [[ ! -z "${{ inputs.slug }}" ]]; then
             slug="${{ inputs.slug }}"
           fi
-          echo "::set-output name=slug::$slug"
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
 
   lint-addon:
     name: Lint Add-on

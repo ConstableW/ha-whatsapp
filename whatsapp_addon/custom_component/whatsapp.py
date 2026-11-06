@@ -1,13 +1,14 @@
 import requests
 from requests.exceptions import RequestException
 
-HOST = 'http://1ffb9e7b-whatsapp-addon:3000/' 
+# {{HOSTNAME}} is replaced with the add-on hostname by run.sh at startup
+HOST = 'http://{{HOSTNAME}}:3000/'
 
 class Whatsapp:
     def _post(self, endpoint, data):
         url = f"{HOST.rstrip('/')}/{endpoint.lstrip('/')}"
         try:
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=dict(data), timeout=30)
             response.raise_for_status()  # wirft Exception bei Fehlercode >= 400
             return response.text.strip() == 'OK'
         except RequestException as e:
