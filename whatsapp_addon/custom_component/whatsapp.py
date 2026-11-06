@@ -1,19 +1,37 @@
+import logging
+from urllib.parse import unquote
+
 import requests
 from requests.exceptions import RequestException
 
+from homeassistant.exceptions import HomeAssistantError
+
+_LOGGER = logging.getLogger(__name__)
+
 # {{HOSTNAME}} is replaced with the add-on hostname by run.sh at startup
 HOST = 'http://{{HOSTNAME}}:3000/'
+
+
+class WhatsappError(HomeAssistantError):
+    """Raised when the WhatsApp add-on rejects or cannot execute a call."""
+
 
 class Whatsapp:
     def _post(self, endpoint, data):
         url = f"{HOST.rstrip('/')}/{endpoint.lstrip('/')}"
         try:
             response = requests.post(url, json=dict(data), timeout=30)
-            response.raise_for_status()  # wirft Exception bei Fehlercode >= 400
-            return response.text.strip() == 'OK'
-        except RequestException as e:
-            print(f"Error calling {url}: {e}")
-            return False
+        except RequestException as err:
+            raise WhatsappError(
+                f"WhatsApp add-on is not reachable ({endpoint}): {err}"
+            ) from err
+
+        if response.status_code < 400 and response.text.strip() == 'OK':
+            return True
+
+        reason = unquote(response.headers.get('X-Whatsapp-Error', '')) or response.text.strip()
+        _LOGGER.error("WhatsApp %s failed (HTTP %s): %s", endpoint, response.status_code, reason)
+        raise WhatsappError(f"WhatsApp {endpoint} failed: {reason or 'unknown error'}")
 
     def send_message(self, data):
         return self._post('sendMessage', data)

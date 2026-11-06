@@ -18,6 +18,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const clients = {};
+let settings = {};
 
 const supervisorPost = (path, data) =>
   axios
@@ -79,7 +80,10 @@ const onLogout = (key) => {
 };
 
 const init = (key) => {
-  clients[key] = new WhatsappClient({ path: `/data/${key}` });
+  clients[key] = new WhatsappClient({
+    path: `/data/${key}`,
+    receiveStatus: settings.receive_status === true,
+  });
 
   clients[key].on("restart", () => logger.debug(`${key} client restarting...`));
   clients[key].on("qr", (qr) => onQr(qr, key));
@@ -126,7 +130,11 @@ const route = (name, required, action) => {
       })
       .catch((error) => {
         logger.error(`${name} failed: ${error.message}`);
-        res.status(500).send("KO");
+        // Body stays "OK"/"KO" for compatibility; the reason travels in a header.
+        res
+          .status(500)
+          .set("X-Whatsapp-Error", encodeURIComponent(String(error.message)))
+          .send("KO");
       });
   });
 };
@@ -144,6 +152,8 @@ fs.readFile("data/options.json", function (error, content) {
     logger.fatal(`Invalid options.json: ${e.message}`);
     process.exit(1);
   }
+
+  settings = options;
 
   (options.clients || []).forEach((key) => {
     init(key);

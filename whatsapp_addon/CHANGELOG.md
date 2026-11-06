@@ -1,3 +1,12 @@
+## 1.6.2
+
+ - WhatsApp status updates no longer fire `new_whatsapp_message` (new option `receive_status`, default off). Protocol messages are ignored as well.
+ - Failed service calls now raise an error in Home Assistant with the reason.
+ - Services validate their input; `options` was added to `send_message`.
+ - A plain string `body` is sent as text message.
+ - Docker build uses `npm ci`; layers are cached.
+ - Fixed the broken YAML examples in the documentation.
+
 ## 1.6.1
 
  - Fixed Home Assistant services not executing (removed `@callback` on async handlers).

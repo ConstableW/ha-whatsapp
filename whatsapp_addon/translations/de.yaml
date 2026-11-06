@@ -1,0 +1,13 @@
+---
+configuration:
+  clients:
+    name: Clients
+    description: >-
+      Namen (IDs) der WhatsApp-Sitzungen, z. B. "default". Jede Sitzung braucht
+      einen eigenen QR-Code-Scan. Die ID wird in allen Services und Events als
+      clientId verwendet.
+  receive_status:
+    name: Status-Updates empfangen
+    description: >-
+      WhatsApp-Status-Updates als new_whatsapp_message-Event weiterleiten.
+      Standardmäßig aus, damit Status keine Nachrichten-Automationen auslösen.

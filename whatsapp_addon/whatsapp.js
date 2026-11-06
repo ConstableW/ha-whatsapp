@@ -18,6 +18,22 @@ const MessageType = {
   contact: "contactMessage",
 };
 
+const STATUS_JID = "status@broadcast";
+
+// Message types that carry no user content and must never trigger automations.
+const IGNORED_MESSAGE_TYPES = new Set([
+  "messageContextInfo",
+  "protocolMessage",
+  "senderKeyDistributionMessage",
+]);
+
+// Decides whether an incoming Baileys message is forwarded as `new_whatsapp_message`.
+const shouldForward = (msg, { receiveStatus = false } = {}) => {
+  if (!msg || !msg.message || !msg.key || msg.key.fromMe) return false;
+  if (!receiveStatus && msg.key.remoteJid === STATUS_JID) return false;
+  return Object.keys(msg.message).some((k) => !IGNORED_MESSAGE_TYPES.has(k));
+};
+
 class WhatsappClient extends EventEmitter {
   #conn;
   #path;
@@ -27,6 +43,7 @@ class WhatsappClient extends EventEmitter {
   #attempts;
   #offline;
   #refreshMs;
+  #receiveStatus;
 
   #status = {
     attempt: 0,
@@ -43,9 +60,11 @@ class WhatsappClient extends EventEmitter {
     attempts = Infinity,
     offline = true,
     refreshMs,
+    receiveStatus = false,
   }) {
     super();
     this.#path = path;
+    this.#receiveStatus = !!receiveStatus;
     this.#timeout = timeout;
     this.#attempts = attempts;
     this.#offline = offline;
@@ -148,7 +167,7 @@ class WhatsappClient extends EventEmitter {
 
     this.#conn.ev.on("messages.upsert", async ({ messages }) => {
       for (const msg of messages) {
-        if (msg.message && !msg.key.fromMe) {
+        if (shouldForward(msg, { receiveStatus: this.#receiveStatus })) {
           delete msg.message.messageContextInfo;
           const messageType = Object.keys(msg.message)[0];
           this.emit("msg", { type: messageType, ...msg });
@@ -202,6 +221,9 @@ class WhatsappClient extends EventEmitter {
     if (this.#status.disconnected || !this.#status.connected) {
       throw new WhatsappDisconnectedError();
     }
+
+    // A plain string is shorthand for a text message.
+    if (typeof msg === "string") msg = { text: msg };
 
     const id = this.#toId(phone);
 
@@ -320,4 +342,4 @@ class WhatsappError extends Error {
   }
 }
 
-module.exports = { WhatsappClient, MessageType };
+module.exports = { WhatsappClient, MessageType, shouldForward };

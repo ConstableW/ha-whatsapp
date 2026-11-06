@@ -2,4 +2,11 @@
 configuration:
   clients:
     name: Clients
-    description: Create other clients
+    description: >-
+      Names (IDs) of the WhatsApp sessions, e.g. "default". Every session needs
+      its own QR code scan. The ID is used as clientId in all services and events.
+  receive_status:
+    name: Receive status updates
+    description: >-
+      Forward WhatsApp status updates (stories) as new_whatsapp_message events.
+      Disabled by default so statuses do not trigger message automations.

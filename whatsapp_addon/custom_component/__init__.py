@@ -2,36 +2,93 @@ from __future__ import annotations
 
 import logging
 
-from .whatsapp import Whatsapp
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+
+from .whatsapp import Whatsapp
 
 DOMAIN = "whatsapp"
 _LOGGER = logging.getLogger(__name__)
 
+# Unknown extra keys are allowed so existing automations keep working.
+_BASE = {vol.Required("clientId"): cv.string}
+
+SEND_MESSAGE_SCHEMA = vol.Schema(
+    {
+        **_BASE,
+        vol.Required("to"): cv.string,
+        vol.Required("body"): vol.Any(cv.string, dict),
+        vol.Optional("options"): dict,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+SET_STATUS_SCHEMA = vol.Schema(
+    {**_BASE, vol.Required("status"): cv.string},
+    extra=vol.ALLOW_EXTRA,
+)
+
+# `userId` is the legacy name of `to` and is still accepted.
+PRESENCE_SUBSCRIBE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **_BASE,
+            vol.Exclusive("to", "target"): cv.string,
+            vol.Exclusive("userId", "target"): cv.string,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
+    cv.has_at_least_one_key("to", "userId"),
+)
+
+PRESENCE_UPDATE_SCHEMA = vol.Schema(
+    {
+        **_BASE,
+        vol.Required("type"): vol.In(
+            ["unavailable", "available", "composing", "recording", "paused"]
+        ),
+        vol.Optional("to"): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     whatsapp = Whatsapp()
 
-    async def send_message(call: ServiceCall) -> None:
-        await hass.async_add_executor_job(whatsapp.send_message, call.data)
+    def _handler(method):
+        async def handler(call: ServiceCall) -> None:
+            # Raises WhatsappError (a HomeAssistantError) if the add-on reports a failure.
+            await hass.async_add_executor_job(method, dict(call.data))
 
-    async def set_status(call: ServiceCall) -> None:
-        await hass.async_add_executor_job(whatsapp.set_status, call.data)
+        return handler
 
-    async def presence_subscribe(call: ServiceCall) -> None:
-        await hass.async_add_executor_job(whatsapp.presence_subscribe, call.data)
-
-    async def send_presence_update(call: ServiceCall) -> None:
-        await hass.async_add_executor_job(whatsapp.send_presence_update, call.data)
-
-    async def send_infinity_presence_update(call: ServiceCall) -> None:
-        await hass.async_add_executor_job(whatsapp.send_infinity_presence_update, call.data)
-
-    hass.services.async_register(DOMAIN, 'send_message', send_message)
-    hass.services.async_register(DOMAIN, 'set_status', set_status)
-    hass.services.async_register(DOMAIN, 'presence_subscribe', presence_subscribe)
-    hass.services.async_register(DOMAIN, 'send_presence_update', send_presence_update)
-    hass.services.async_register(DOMAIN, 'send_infinity_presence_update', send_infinity_presence_update)
+    hass.services.async_register(
+        DOMAIN, "send_message", _handler(whatsapp.send_message), schema=SEND_MESSAGE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "set_status", _handler(whatsapp.set_status), schema=SET_STATUS_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "presence_subscribe",
+        _handler(whatsapp.presence_subscribe),
+        schema=PRESENCE_SUBSCRIBE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "send_presence_update",
+        _handler(whatsapp.send_presence_update),
+        schema=PRESENCE_UPDATE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "send_infinity_presence_update",
+        _handler(whatsapp.send_infinity_presence_update),
+        schema=PRESENCE_UPDATE_SCHEMA,
+    )
 
     return True
