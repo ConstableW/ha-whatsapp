@@ -1,3 +1,7 @@
+## 2.0.1
+
+ - Panel: removed a stray "null" text when there are no problems, "1 Client" singular, long counter labels wrap on small screens.
+
 ## 2.0.0
 
  - New **WhatsApp panel** in the sidebar (Ingress): add, rename, enable/disable, connect/disconnect, re-authenticate and remove clients without restarting the add-on, QR pairing dialog, client details with groups and event log.

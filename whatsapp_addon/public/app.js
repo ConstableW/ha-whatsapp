@@ -648,12 +648,12 @@
           }))
       : null;
 
-    app.replaceChildren(
+    app.replaceChildren(...[
       h("div", { class: "header" },
         h("div", {}, h("h1", { text: t("title") }), h("div", { class: "sub", text: t("subtitle") })),
         h("div", { class: "chip-service" },
           h("b", { text: t("serviceRunning") }),
-          h("span", { class: "muted", text: `${t("clientsN", { n: tt.clients })} · ${t("upFor", { t: duration(now - s.service.startedAt) })}` }))),
+          h("span", { class: "muted", text: `${tt.clients === 1 ? t("clientsOne") : t("clientsN", { n: tt.clients })} · ${t("upFor", { t: duration(now - s.service.startedAt) })}` }))),
       h("div", { class: "tiles" },
         tile("", tt.clients, t("tileClients"), t("tileConnected", { n: tt.connected })),
         tile(tt.needsAuth ? "warn" : "", tt.needsAuth, t("tileNeedsAuth")),
@@ -677,7 +677,7 @@
           h("label", { text: t("optInactivity") }),
           days,
           h("span", { class: "muted", text: t("optInactivityHint") })))
-    );
+    ].filter(Boolean));
     renderList();
     if (hadFocus) searchInput.focus();
   };
