@@ -1,3 +1,12 @@
+## 1.6.1
+
+ - Fixed Home Assistant services not executing (removed `@callback` on async handlers).
+ - Restored add-on hostname replacement for the custom component.
+ - Fixed `presence_subscribe` field mismatch (`to`).
+ - Fixed crashes from unhandled rejections and logout cleanup.
+ - Added input validation and proper HTTP status codes.
+ - Removed `node_modules` from the repository.
+
 ## 1.6.0
 
  - Integrated Baileys library as an npm dependency and removed the local copy.
