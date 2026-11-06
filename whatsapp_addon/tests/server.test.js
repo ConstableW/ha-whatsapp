@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { setup, silentLogger } = require("./helpers");
-const { createApp } = require("../lib/server");
+const { createApp, resolveSupervisorIps } = require("../lib/server");
 const { shouldForward } = require("../whatsapp");
 
 const start = async ({ adminIps = ["127.0.0.1"], options } = {}) => {
@@ -25,7 +25,7 @@ const start = async ({ adminIps = ["127.0.0.1"], options } = {}) => {
     server.close();
     env.cleanup();
   };
-  return { env, call, admin, stop };
+  return { env, app, call, admin, stop };
 };
 
 test("management UI and API are refused for other peers", async () => {
@@ -163,4 +163,28 @@ test("status updates and protocol messages are not forwarded", () => {
   assert.equal(shouldForward(msg("1@s.whatsapp.net", { protocolMessage: {} })), false);
   assert.equal(shouldForward(msg("1@s.whatsapp.net", { conversation: "x" }, true)), false);
   assert.equal(shouldForward(msg("1@s.whatsapp.net", null)), false);
+});
+
+test("the resolved Supervisor address is accepted in addition to the default", async () => {
+  assert.deepEqual(
+    await resolveSupervisorIps({
+      lookup: async () => [{ address: "::ffff:10.1.2.3" }, { address: "10.1.2.4" }],
+    }),
+    ["10.1.2.3", "10.1.2.4"]
+  );
+  assert.deepEqual(
+    await resolveSupervisorIps({
+      lookup: async () => {
+        throw new Error("ENOTFOUND");
+      },
+    }),
+    [],
+    "a failed lookup must not break anything"
+  );
+
+  const t = await start({ adminIps: ["172.30.32.2"] });
+  assert.equal((await t.call("GET", "/admin/api/state")).status, 403);
+  t.app.adminIps.add("127.0.0.1"); // as index.js does with the resolved address
+  assert.equal((await t.call("GET", "/admin/api/state")).status, 200);
+  t.stop();
 });

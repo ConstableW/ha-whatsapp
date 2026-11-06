@@ -1,3 +1,4 @@
+const dns = require("dns").promises;
 const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -9,6 +10,21 @@ const { ManagerError } = require("./manager");
 const DEFAULT_ADMIN_IPS = ["172.30.32.2"];
 
 const normalizeIp = (ip = "") => ip.replace(/^::ffff:/, "");
+
+// Addresses of the Supervisor as seen from inside the add-on network. The
+// hostname is resolved in addition to the well-known default, so the panel
+// keeps working if the internal network ever uses another address.
+const resolveSupervisorIps = async ({
+  hostname = "supervisor",
+  lookup = (name) => dns.lookup(name, { all: true }),
+} = {}) => {
+  try {
+    const found = await lookup(hostname);
+    return found.map((entry) => normalizeIp(entry.address));
+  } catch (error) {
+    return [];
+  }
+};
 
 const own = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 
@@ -22,6 +38,9 @@ const createApp = ({
   const app = express();
   const startedAt = Date.now();
   const allowed = new Set(adminIps.map(normalizeIp));
+
+  // Exposed so the resolved Supervisor addresses can be added at runtime.
+  app.adminIps = allowed;
 
   app.disable("x-powered-by");
   app.use(bodyParser.urlencoded({ extended: false }));
@@ -201,4 +220,4 @@ const createApp = ({
   return app;
 };
 
-module.exports = { createApp, DEFAULT_ADMIN_IPS };
+module.exports = { createApp, resolveSupervisorIps, DEFAULT_ADMIN_IPS };

@@ -24,7 +24,7 @@ Counters (received, sent, failed sends, connection losses, reconnect attempts) a
 
 The client list is stored in the add-on configuration (`clients`, `disabled_clients`, `client_labels`). Changes in the panel are written there, so the configuration page always shows the same clients. Existing installations need no migration and do not have to pair again.
 
-**Security:** the panel and its API (`/admin/...`) only accept connections coming from the Home Assistant Supervisor ingress proxy, i.e. after a Home Assistant login. The service endpoints used by the Home Assistant services stay reachable inside the internal add-on network as before.
+**Security:** the panel and its API (`/admin/...`) only accept connections coming from the Home Assistant Supervisor ingress proxy, i.e. after a Home Assistant login. The accepted address is the Supervisor's well-known internal address plus whatever the hostname `supervisor` resolves to inside the add-on network. The service endpoints used by the Home Assistant services stay reachable inside the internal add-on network as before.
 
 ### How to add other Whatsapp sessions
 
