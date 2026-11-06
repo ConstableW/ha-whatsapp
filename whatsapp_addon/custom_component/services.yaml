@@ -1,26 +1,36 @@
 send_message:
   name: Send message
-  description: Send a Whatsapp message
+  description: >-
+    Send a Whatsapp message. For images, audio, locations and reactions use the
+    YAML mode and pass an object as body (see the add-on documentation).
   fields:
     clientId:
       name: Client ID
       description: Which instance of whatsapp should the message come from
       required: true
       example: default
+      selector:
+        text:
     to:
       name: Target User ID
-      description: Target User ID
+      description: Target user (number@s.whatsapp.net) or group (id@g.us)
       required: true
       example: 391234567890@s.whatsapp.net
+      selector:
+        text:
     body:
       name: Message's body
-      description: Message's body
+      description: The text of the message
       required: true
       example: "Hello from Home Assistant"
+      selector:
+        text:
+          multiline: true
     options:
       name: Options
-      description: Optional Baileys send options, e.g. quoted message
+      description: Optional send options, e.g. a quoted message
       required: false
+      example: '{"quoted": "{{ trigger.event.data }}"}'
       selector:
         object:
 
@@ -33,11 +43,15 @@ set_status:
       description: Which instance of whatsapp should be used
       required: true
       example: default
+      selector:
+        text:
     status:
       name: New status message
       description: New status message
       required: true
       example: Available
+      selector:
+        text:
 
 presence_subscribe:
   name: Presence subscribe
@@ -48,11 +62,15 @@ presence_subscribe:
       description: Which instance of whatsapp should be used
       required: true
       example: default
+      selector:
+        text:
     to:
       name: Target User ID
       description: Target User ID
       required: true
       example: 391234567890@s.whatsapp.net
+      selector:
+        text:
 
 send_presence_update:
   name: Send presence update
@@ -63,6 +81,8 @@ send_presence_update:
       description: Which instance of whatsapp should be used
       required: true
       example: default
+      selector:
+        text:
     type:
       name: Presence type
       description: Presence type
@@ -81,6 +101,8 @@ send_presence_update:
       description: Target User ID
       required: false
       example: 391234567890@s.whatsapp.net
+      selector:
+        text:
 
 send_infinity_presence_update:
   name: Send infinity presence update
@@ -91,6 +113,8 @@ send_infinity_presence_update:
       description: Which instance of whatsapp should be used
       required: true
       example: default
+      selector:
+        text:
     type:
       name: Presence type
       description: Presence type
@@ -109,6 +133,8 @@ send_infinity_presence_update:
       description: Target User ID
       required: false
       example: 391234567890@s.whatsapp.net
+      selector:
+        text:
 
 get_groups:
   name: Get groups
@@ -119,3 +145,12 @@ get_groups:
       description: Which instance of whatsapp should be used
       required: true
       example: default
+      selector:
+        text:
+    refresh:
+      name: Refresh
+      description: Fetch the groups from WhatsApp again instead of using the cache (up to one minute old)
+      required: false
+      example: false
+      selector:
+        boolean:

@@ -1,3 +1,7 @@
+## 2.0.2
+
+ - All service fields now have selectors, so the Home Assistant action tool and the automation editor show real input fields in UI mode instead of "parameters only available in YAML mode". New optional `refresh` field for `get_groups`.
+
 ## 2.0.1
 
  - Panel: removed a stray "null" text when there are no problems, "1 Client" singular, long counter labels wrap on small screens.
