@@ -1,3 +1,13 @@
+## 1.7.0
+
+ - New **WhatsApp panel** in the sidebar (Ingress): add, rename, enable/disable, connect/disconnect, re-authenticate and remove clients without restarting the add-on, QR pairing dialog, client details with groups and event log.
+ - Real session states from Baileys events; a logout is shown as "authentication invalid" and is no longer re-paired automatically. No invented expiry times.
+ - Persistent counters per client (received, sent, failed, connection losses, reconnect attempts) in `/data/stats.json`; no message contents are stored.
+ - The client list stays in the add-on configuration (new optional options `disabled_clients`, `client_labels`, `inactivity_warning_days`). Existing installations migrate without pairing again.
+ - The panel and its API only accept connections from the Supervisor ingress proxy. Service endpoints are unchanged.
+ - `new_whatsapp_message` contains `groupName` for group messages; new service `whatsapp.get_groups`.
+ - German and English translations, automated tests (`npm test`).
+
 ## 1.6.2
 
  - WhatsApp status updates no longer fire `new_whatsapp_message` (new option `receive_status`, default off). Protocol messages are ignored as well.

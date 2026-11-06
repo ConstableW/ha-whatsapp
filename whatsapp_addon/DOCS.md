@@ -5,9 +5,30 @@ Maintained by [ConstableW/ha-whatsapp](https://github.com/ConstableW/ha-whatsapp
 
 ## How to use
 
+### WhatsApp panel (client management)
+
+The add-on adds a **WhatsApp** entry to the Home Assistant sidebar (Ingress, administrators only). There you can
+
+- see all clients with their real connection state, phone number, last activity and message counters,
+- add, rename, enable/disable, connect/disconnect and remove clients without restarting the add-on,
+- pair a client with a QR code dialog and re-authenticate it while the other clients keep running,
+- list the groups a client is a member of (with group ID to copy),
+- read a small event log per client (connects, connection losses, logouts, failed sends),
+- change the general settings (status updates, inactivity warning).
+
+Client states: connected, connecting, temporarily disconnected, reconnecting, QR pairing required, authentication invalid, disabled, disconnected (manual).
+They are derived from the actual WhatsApp connection events. The panel never shows a made-up session expiry.
+If WhatsApp logs a session out (for example the device was removed on the phone or the phone was offline for too long) the client switches to _authentication invalid_ and stays there until you use **Re-authenticate**. A persistent notification is created as well.
+
+Counters (received, sent, failed sends, connection losses, reconnect attempts) are stored persistently in `/data/stats.json`. Only numbers and timestamps are stored, never message contents. "Sent" counts messages sent through the add-on.
+
+The client list is stored in the add-on configuration (`clients`, `disabled_clients`, `client_labels`). Changes in the panel are written there, so the configuration page always shows the same clients. Existing installations need no migration and do not have to pair again.
+
+**Security:** the panel and its API (`/admin/...`) only accept connections coming from the Home Assistant Supervisor ingress proxy, i.e. after a Home Assistant login. The service endpoints used by the Home Assistant services stay reachable inside the internal add-on network as before.
+
 ### How to add other Whatsapp sessions
 
-Go to the configuration page and add the desired `clientId` to the clients input box. It is the identifier of the session and is used in every service call and event.
+Use **Add client** in the WhatsApp panel (or add the ID to `clients` in the configuration). The `clientId` is used in every service call and event and cannot be changed later; the display name can.
 
 ### How to get a User ID
 
@@ -25,8 +46,24 @@ For example for Italian number _3456789010_ the user id is _393456789010@s.whats
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `clients`        | List of session IDs.                                                                                                              |
 | `receive_status` | Default `false`. WhatsApp status updates (stories) are **not** forwarded as `new_whatsapp_message`. Set to `true` to receive them. |
+| `disabled_clients`, `client_labels` | Managed by the WhatsApp panel (disabled clients, display names as `id=Name`). |
+| `inactivity_warning_days` | Default `14`. The panel warns when a client had no connection for this many days. `0` turns it off. |
 
 Protocol and key-distribution messages (no user content) are never forwarded.
+
+### Group messages
+
+For messages from a group the `new_whatsapp_message` event contains an additional field `groupName` with the name of the group (`trigger.event.data.groupName`). `key.remoteJid` is the group ID (`...@g.us`).
+
+### List groups
+
+```yaml
+service: whatsapp.get_groups
+data:
+  clientId: default
+response_variable: groups
+# groups.groups -> [{ id: "1203...@g.us", subject: "Family", participants: 5 }]
+```
 
 ### Errors
 
