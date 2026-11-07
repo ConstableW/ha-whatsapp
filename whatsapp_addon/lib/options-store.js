@@ -31,7 +31,7 @@ const DEFAULT_SETTINGS = { receive_status: false, inactivity_warning_days: 14 };
 const parseOptions = (raw = {}) => {
   const list = Array.isArray(raw.clients) ? raw.clients : [];
   const disabled = new Set(
-    Array.isArray(raw.disabled_clients) ? raw.disabled_clients : []
+    Array.isArray(raw.disabled_clients) ? raw.disabled_clients : [],
   );
   const labels = new Map();
   (Array.isArray(raw.client_labels) ? raw.client_labels : []).forEach(
@@ -41,7 +41,7 @@ const parseOptions = (raw = {}) => {
       if (at < 1) return;
       const label = cleanLabel(entry.slice(at + 1));
       if (label) labels.set(entry.slice(0, at), label);
-    }
+    },
   );
 
   const seen = new Set();
@@ -76,7 +76,9 @@ const parseOptions = (raw = {}) => {
 const serializeOptions = ({ clients, settings }) => ({
   clients: clients.map((c) => c.id),
   disabled_clients: clients.filter((c) => !c.enabled).map((c) => c.id),
-  client_labels: clients.filter((c) => c.label).map((c) => `${c.id}=${c.label}`),
+  client_labels: clients
+    .filter((c) => c.label)
+    .map((c) => `${c.id}=${c.label}`),
   receive_status: settings.receive_status,
   inactivity_warning_days: settings.inactivity_warning_days,
 });
@@ -141,7 +143,7 @@ class OptionsStore {
     if (!this.#token) {
       fs.writeFileSync(
         this.#file,
-        JSON.stringify({ ...this.#raw, ...serialized }, null, 2)
+        JSON.stringify({ ...this.#raw, ...serialized }, null, 2),
       );
       return;
     }
@@ -154,7 +156,7 @@ class OptionsStore {
     try {
       const res = await this.#http.get(
         `${this.#baseUrl}/addons/self/options/config`,
-        { headers }
+        { headers },
       );
       if (res.data && res.data.data) current = res.data.data;
     } catch (e) {
@@ -164,7 +166,7 @@ class OptionsStore {
     await this.#http.post(
       `${this.#baseUrl}/addons/self/options`,
       { options: { ...current, ...serialized } },
-      { headers }
+      { headers },
     );
   }
 }

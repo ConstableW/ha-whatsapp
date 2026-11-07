@@ -40,7 +40,10 @@ test("event log is capped", () => {
   const s = new StatsStore({ file: tmp(), maxEvents: 3 });
   for (let i = 0; i < 5; i++) s.addEvent("c", "e", `n${i}`);
   const ev = s.get("c").events;
-  assert.deepEqual(ev.map((e) => e.message), ["n2", "n3", "n4"]);
+  assert.deepEqual(
+    ev.map((e) => e.message),
+    ["n2", "n3", "n4"],
+  );
 });
 
 test("unknown counters are rejected", () => {

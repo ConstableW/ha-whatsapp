@@ -24,7 +24,10 @@ test("legacy options (only a list of IDs) are parsed with defaults", () => {
     { id: "default", label: null, enabled: true },
     { id: "work", label: null, enabled: true },
   ]);
-  assert.deepEqual(settings, { receive_status: false, inactivity_warning_days: 14 });
+  assert.deepEqual(settings, {
+    receive_status: false,
+    inactivity_warning_days: 14,
+  });
 });
 
 test("labels, disabled clients and settings round-trip", () => {
@@ -45,7 +48,10 @@ test("unsafe or duplicate IDs are dropped", () => {
   const { clients, skipped } = parseOptions({
     clients: ["ok", "../etc", "a/b", "creds.json", "ok", "", ".hidden"],
   });
-  assert.deepEqual(clients.map((c) => c.id), ["ok"]);
+  assert.deepEqual(
+    clients.map((c) => c.id),
+    ["ok"],
+  );
   assert.equal(skipped.length, 5);
 });
 
@@ -61,7 +67,9 @@ test("file mode: update persists and keeps unknown keys", async () => {
   const file = tmpFile({ clients: ["default"], other: 1 });
   const store = new OptionsStore({ file, token: "" });
   store.load();
-  await store.update((d) => d.clients.push({ id: "work", label: "Work", enabled: true }));
+  await store.update((d) =>
+    d.clients.push({ id: "work", label: "Work", enabled: true }),
+  );
   const saved = JSON.parse(fs.readFileSync(file, "utf8"));
   assert.deepEqual(saved.clients, ["default", "work"]);
   assert.deepEqual(saved.client_labels, ["work=Work"]);
@@ -80,9 +88,16 @@ test("supervisor mode: merges with current options and posts them", async () => 
     },
   };
   const file = tmpFile({ clients: ["default"] });
-  const store = new OptionsStore({ file, token: "T", baseUrl: "http://sup", http });
+  const store = new OptionsStore({
+    file,
+    token: "T",
+    baseUrl: "http://sup",
+    http,
+  });
   store.load();
-  await store.update((d) => d.clients.push({ id: "x", label: null, enabled: false }));
+  await store.update((d) =>
+    d.clients.push({ id: "x", label: null, enabled: false }),
+  );
 
   const post = calls.find((c) => c[0] === "post");
   assert.equal(post[1], "http://sup/addons/self/options");
@@ -112,8 +127,11 @@ test("concurrent updates are serialized and none is lost", async () => {
   store.load();
   await Promise.all(
     ["a", "b", "c"].map((id) =>
-      store.update((d) => d.clients.push({ id, label: null, enabled: true }))
-    )
+      store.update((d) => d.clients.push({ id, label: null, enabled: true })),
+    ),
   );
-  assert.deepEqual(store.get().clients.map((c) => c.id), ["a", "b", "c"]);
+  assert.deepEqual(
+    store.get().clients.map((c) => c.id),
+    ["a", "b", "c"],
+  );
 });

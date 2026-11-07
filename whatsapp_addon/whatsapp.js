@@ -45,7 +45,7 @@ const reasonName = (code) => {
 const readAccount = (dir) => {
   try {
     const creds = JSON.parse(
-      fs.readFileSync(path.join(dir, "creds.json"), "utf8")
+      fs.readFileSync(path.join(dir, "creds.json"), "utf8"),
     );
     if (!creds.me || !creds.me.id) return null;
     return {
@@ -159,9 +159,11 @@ class WhatsappClient extends EventEmitter {
       this.#conn = conn;
 
       // Events of an old socket must never influence the current one.
-      const current = (fn) => (...args) => {
-        if (conn === this.#conn) fn(...args);
-      };
+      const current =
+        (fn) =>
+        (...args) => {
+          if (conn === this.#conn) fn(...args);
+        };
 
       conn.ev.on(
         "creds.update",
@@ -173,7 +175,7 @@ class WhatsappClient extends EventEmitter {
             });
           }
           saveCreds();
-        })
+        }),
       );
 
       conn.ev.on("connection.update", current(this.#onConnectionUpdate));
@@ -384,8 +386,8 @@ class WhatsappClient extends EventEmitter {
         new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error("group lookup timed out")),
-            GROUP_LOOKUP_TIMEOUT_MS
-          ).unref()
+            GROUP_LOOKUP_TIMEOUT_MS,
+          ).unref(),
         ),
       ]);
       this.#rememberGroup(jid, meta?.subject);
@@ -405,7 +407,11 @@ class WhatsappClient extends EventEmitter {
   getGroups = async ({ refresh = false } = {}) => {
     this.#assertConnected();
 
-    if (!refresh && this.#groupList && Date.now() - this.#groupList.at < 60000) {
+    if (
+      !refresh &&
+      this.#groupList &&
+      Date.now() - this.#groupList.at < 60000
+    ) {
       return this.#groupList.list;
     }
 

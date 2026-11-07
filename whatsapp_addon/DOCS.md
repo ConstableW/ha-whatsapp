@@ -83,16 +83,16 @@ You can use several clients (several WhatsApp numbers) side by side. A persisten
 
 The states come from the real WhatsApp connection events. The panel never shows a made-up session expiry.
 
-| State                           | Meaning                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------- |
-| Connected                       | The session is active.                                                                        |
-| Connecting                      | The client is starting.                                                                       |
-| Temporarily disconnected        | The connection dropped; a reconnect follows automatically.                                    |
-| Reconnecting                    | A reconnect attempt is running.                                                               |
-| QR pairing required             | The client was never paired (or was re-authenticated). Scan the QR code.                      |
-| Authentication invalid          | WhatsApp logged the session out (for example the device was removed on the phone). See below. |
-| Disabled                        | The client is switched off. Its session is kept.                                              |
-| Disconnected (manual)           | You disconnected it. It connects again after an add-on restart or with _Connect_.             |
+| State                    | Meaning                                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| Connected                | The session is active.                                                                        |
+| Connecting               | The client is starting.                                                                       |
+| Temporarily disconnected | The connection dropped; a reconnect follows automatically.                                    |
+| Reconnecting             | A reconnect attempt is running.                                                               |
+| QR pairing required      | The client was never paired (or was re-authenticated). Scan the QR code.                      |
+| Authentication invalid   | WhatsApp logged the session out (for example the device was removed on the phone). See below. |
+| Disabled                 | The client is switched off. Its session is kept.                                              |
+| Disconnected (manual)    | You disconnected it. It connects again after an add-on restart or with _Connect_.             |
 
 **After a logout** the client stays on _Authentication invalid_ until you click **Re-authenticate**. It does not start a new pairing by itself, and a persistent notification tells you about it.
 
@@ -110,13 +110,13 @@ The inactivity warning appears when a client has had no connection for a number 
 
 The client list is stored in the add-on configuration, so the configuration page and the panel always show the same clients. Changes you make in the panel are written there.
 
-| Option                      | Description                                                                                                                                  |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `clients`                   | List of client IDs. Add clients here or in the panel.                                                                                        |
-| `disabled_clients`          | Managed by the panel. Listed clients are not connected.                                                                                      |
-| `client_labels`             | Managed by the panel. Display names as `id=Name`.                                                                                            |
-| `receive_status`            | Default `false`. WhatsApp status updates (stories) are **not** forwarded as `new_whatsapp_message`. Set to `true` to receive them.           |
-| `inactivity_warning_days`   | Default `14`. The panel warns when a client had no connection for this many days. `0` turns it off.                                          |
+| Option                    | Description                                                                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `clients`                 | List of client IDs. Add clients here or in the panel.                                                                              |
+| `disabled_clients`        | Managed by the panel. Listed clients are not connected.                                                                            |
+| `client_labels`           | Managed by the panel. Display names as `id=Name`.                                                                                  |
+| `receive_status`          | Default `false`. WhatsApp status updates (stories) are **not** forwarded as `new_whatsapp_message`. Set to `true` to receive them. |
+| `inactivity_warning_days` | Default `14`. The panel warns when a client had no connection for this many days. `0` turns it off.                                |
 
 ## Targets: users and groups
 
@@ -129,14 +129,14 @@ The target of a message is the `to` field.
 
 All services take `clientId`. Failed calls raise an error in Home Assistant, see [Errors](#errors).
 
-| Service                                | Fields                                                              | Description                                                         |
-| -------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `whatsapp.send_message`                | `clientId`, `to`, `body`, `options` (optional)                      | Send a message.                                                     |
-| `whatsapp.set_status`                  | `clientId`, `status`                                                | Set the profile status text.                                        |
-| `whatsapp.presence_subscribe`          | `clientId`, `to` (alias `userId`)                                   | Receive presence updates of a contact.                              |
-| `whatsapp.send_presence_update`        | `clientId`, `type`, `to` (optional)                                 | Send a presence once: `available`, `unavailable`, `composing`, `recording`, `paused`. |
-| `whatsapp.send_infinity_presence_update` | `clientId`, `type`, `to` (optional)                               | Repeat a presence every 10 seconds.                                 |
-| `whatsapp.get_groups`                  | `clientId`, `refresh` (optional)                                    | Returns the groups of the account. Use it with `response_variable`. |
+| Service                                  | Fields                                         | Description                                                                           |
+| ---------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `whatsapp.send_message`                  | `clientId`, `to`, `body`, `options` (optional) | Send a message.                                                                       |
+| `whatsapp.set_status`                    | `clientId`, `status`                           | Set the profile status text.                                                          |
+| `whatsapp.presence_subscribe`            | `clientId`, `to` (alias `userId`)              | Receive presence updates of a contact.                                                |
+| `whatsapp.send_presence_update`          | `clientId`, `type`, `to` (optional)            | Send a presence once: `available`, `unavailable`, `composing`, `recording`, `paused`. |
+| `whatsapp.send_infinity_presence_update` | `clientId`, `type`, `to` (optional)            | Repeat a presence every 10 seconds.                                                   |
+| `whatsapp.get_groups`                    | `clientId`, `refresh` (optional)               | Returns the groups of the account. Use it with `response_variable`.                   |
 
 ### Send a simple text message
 
@@ -232,9 +232,9 @@ Presence updates arrive as the event `whatsapp_presence_update`. Contacts only r
 
 ## Events
 
-| Event type                 | Description                           |
-| -------------------------- | ------------------------------------- |
-| `new_whatsapp_message`     | A message was received                |
+| Event type                 | Description                             |
+| -------------------------- | --------------------------------------- |
+| `new_whatsapp_message`     | A message was received                  |
 | `whatsapp_presence_update` | Presence of a contact in a chat changed |
 
 ### `new_whatsapp_message`
@@ -265,13 +265,13 @@ groupName: Family # only for group messages
 
 If the add-on cannot execute a service call, the Home Assistant action **fails with an error message**. Use `continue_on_error: true` in automations or the error output of the Node-RED node to react to it.
 
-| Message                                           | Cause                                                                                    |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `Client ID not found.`                            | `clientId` does not exist. Check the ID in the panel.                                    |
-| `Client <id> is not running (<state>).`           | The client is disabled or manually disconnected.                                         |
-| `Send message failed. Whatsapp disconnected error.` | The client is not connected right now (see its state in the panel).                    |
-| `Number <n> is not on Whatsapp.`                  | The target number has no WhatsApp account.                                               |
-| `WhatsApp add-on is not reachable`                | The add-on is stopped or restarting.                                                     |
+| Message                                             | Cause                                                               |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| `Client ID not found.`                              | `clientId` does not exist. Check the ID in the panel.               |
+| `Client <id> is not running (<state>).`             | The client is disabled or manually disconnected.                    |
+| `Send message failed. Whatsapp disconnected error.` | The client is not connected right now (see its state in the panel). |
+| `Number <n> is not on Whatsapp.`                    | The target number has no WhatsApp account.                          |
+| `WhatsApp add-on is not reachable`                  | The add-on is stopped or restarting.                                |
 
 ## Sample automations
 

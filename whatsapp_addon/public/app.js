@@ -5,7 +5,7 @@
   const dict = window.I18N[lang];
   const t = (key, vars) =>
     (dict[key] || window.I18N.en[key] || key).replace(/\{(\w+)\}/g, (_, k) =>
-      vars && vars[k] !== undefined ? vars[k] : ""
+      vars && vars[k] !== undefined ? vars[k] : "",
     );
   document.documentElement.lang = lang;
 
@@ -80,16 +80,22 @@
       reconnecting: "warn",
       qr_required: "warn",
       auth_invalid: "err",
-    }[state] || "");
+    })[state] || "";
 
   const chip = (state) =>
-    h("span", { class: "chip " + stateClass(state), text: t("state." + state) });
+    h("span", {
+      class: "chip " + stateClass(state),
+      text: t("state." + state),
+    });
 
   const name = (c) => c.label || c.id;
 
   const toast = (msg, isError) => {
     const box = document.getElementById("toasts");
-    const el = h("div", { class: "toast" + (isError ? " err" : ""), text: msg });
+    const el = h("div", {
+      class: "toast" + (isError ? " err" : ""),
+      text: msg,
+    });
     box.append(el);
     setTimeout(() => el.remove(), isError ? 6000 : 2500);
   };
@@ -142,7 +148,7 @@
     });
     dlg.append(
       h("div", { class: "dlg-head" }, h("h2", { text: title }), closeBtn),
-      h("div", { class: "dlg-body" }, body)
+      h("div", { class: "dlg-body" }, body),
     );
     if (foot) dlg.append(h("div", { class: "dlg-foot" }, foot));
     dlg.addEventListener("close", () => dlg.remove());
@@ -202,7 +208,7 @@
     });
     if (!ok) return false;
     const done = await run(() =>
-      api("DELETE", `clients/${encodeURIComponent(c.id)}`, { confirm: c.id })
+      api("DELETE", `clients/${encodeURIComponent(c.id)}`, { confirm: c.id }),
     );
     return done !== undefined;
   };
@@ -226,10 +232,10 @@
     const wait = h("p", { class: "muted", text: t("qrWaiting") });
     const box = h("div", { class: "qr" }, h("div", {}, img, wait));
     const c0 = find(id);
-    const dlg = dialog(
-      t("qrTitle", { name: c0 ? name(c0) : id }),
-      [h("p", { class: "muted", text: t("qrHelp") }), box]
-    );
+    const dlg = dialog(t("qrTitle", { name: c0 ? name(c0) : id }), [
+      h("p", { class: "muted", text: t("qrHelp") }),
+      box,
+    ]);
 
     const update = () => {
       const c = find(id);
@@ -263,26 +269,36 @@
       autocomplete: "off",
       id: "add-id",
     });
-    const label = h("input", { type: "text", maxlength: "64", id: "add-label" });
+    const label = h("input", {
+      type: "text",
+      maxlength: "64",
+      id: "add-label",
+    });
     const ok = h("button", { class: "btn primary", text: t("create") });
     const cancel = h("button", { class: "btn", text: t("cancel") });
     const dlg = dialog(
       t("addTitle"),
       [
-        h("div", { class: "field" },
+        h(
+          "div",
+          { class: "field" },
           h("label", { for: "add-id", text: t("fieldId") }),
           id,
-          h("span", { class: "muted", text: t("fieldIdHint") })),
-        h("div", { class: "field" },
+          h("span", { class: "muted", text: t("fieldIdHint") }),
+        ),
+        h(
+          "div",
+          { class: "field" },
           h("label", { for: "add-label", text: t("fieldLabel") }),
-          label),
+          label,
+        ),
       ],
-      [cancel, ok]
+      [cancel, ok],
     );
     cancel.onclick = () => dlg.close();
     ok.onclick = async () => {
       const created = await run(() =>
-        api("POST", "clients", { id: id.value.trim(), label: label.value })
+        api("POST", "clients", { id: id.value.trim(), label: label.value }),
       );
       if (created) {
         dlg.close();
@@ -295,46 +311,103 @@
   // ---- detail dialog -----------------------------------------------
 
   const kv = (rows) =>
-    h("div", { class: "kv" }, rows.flatMap(([k, v]) => [h("div", { text: k }), h("div", {}, v)]));
+    h(
+      "div",
+      { class: "kv" },
+      rows.flatMap(([k, v]) => [h("div", { text: k }), h("div", {}, v)]),
+    );
 
   const counter = (label, value) =>
-    h("div", { class: "counter" }, h("b", { text: value }), h("span", { class: "muted", text: label }));
+    h(
+      "div",
+      { class: "counter" },
+      h("b", { text: value }),
+      h("span", { class: "muted", text: label }),
+    );
 
   const overviewBody = (c, now) => {
     const k = c.counters;
     const out = [
-      kv([
-        [t("kvStatus"), chip(c.state)],
-        [t("kvId"), c.id],
-        [t("kvPhone"), c.phone ? "+" + c.phone : "–"],
-        [t("kvAccount"), c.name || "–"],
-        [t("kvSince"), c.connectedSince ? `${fmtDate(c.connectedSince)} (${duration(now - c.connectedSince)})` : "–"],
-        [t("kvLastConnected"), fmtDate(c.lastConnected)],
-        [t("kvLastActivity"), c.lastActivity ? fmtAgo(c.lastActivity, now) : t("never")],
-        c.lastError ? [t("kvLastError"), c.lastError] : null,
-      ].filter(Boolean)),
-      h("div", { class: "counters" },
+      kv(
+        [
+          [t("kvStatus"), chip(c.state)],
+          [t("kvId"), c.id],
+          [t("kvPhone"), c.phone ? "+" + c.phone : "–"],
+          [t("kvAccount"), c.name || "–"],
+          [
+            t("kvSince"),
+            c.connectedSince
+              ? `${fmtDate(c.connectedSince)} (${duration(now - c.connectedSince)})`
+              : "–",
+          ],
+          [t("kvLastConnected"), fmtDate(c.lastConnected)],
+          [
+            t("kvLastActivity"),
+            c.lastActivity ? fmtAgo(c.lastActivity, now) : t("never"),
+          ],
+          c.lastError ? [t("kvLastError"), c.lastError] : null,
+        ].filter(Boolean),
+      ),
+      h(
+        "div",
+        { class: "counters" },
         counter(t("cToday"), `${k.todaySent} / ${k.todayIncoming}`),
         counter(t("cSent"), k.sent),
         counter(t("cIncoming"), k.incoming),
         counter(t("cFailed"), k.failed),
         counter(t("cDisconnects"), k.disconnects),
-        counter(t("cReconnects"), k.reconnects)),
+        counter(t("cReconnects"), k.reconnects),
+      ),
     ];
     if (c.inactivityWarning) {
-      out.push(h("div", { class: "notice", text: t("inactive", { n: state.settings.inactivity_warning_days }) }));
+      out.push(
+        h("div", {
+          class: "notice",
+          text: t("inactive", { n: state.settings.inactivity_warning_days }),
+        }),
+      );
     }
     const row = h("div", { class: "row" });
     if (c.state === "qr_required") {
-      row.append(h("button", { class: "btn primary", text: t("showQr"), onclick: () => showQr(c.id) }));
+      row.append(
+        h("button", {
+          class: "btn primary",
+          text: t("showQr"),
+          onclick: () => showQr(c.id),
+        }),
+      );
     }
     if (c.enabled) {
-      row.append(h("button", { class: "btn", text: t("reauth"), onclick: () => doReauth(c) }));
+      row.append(
+        h("button", {
+          class: "btn",
+          text: t("reauth"),
+          onclick: () => doReauth(c),
+        }),
+      );
       if (c.state === "stopped") {
-        row.append(h("button", { class: "btn", text: t("connect"), onclick: () => post(c, "connect") }));
+        row.append(
+          h("button", {
+            class: "btn",
+            text: t("connect"),
+            onclick: () => post(c, "connect"),
+          }),
+        );
       } else if (c.state !== "auth_invalid") {
-        row.append(h("button", { class: "btn", text: t("disconnect"), onclick: () => post(c, "disconnect") }));
-        row.append(h("button", { class: "btn", text: t("reconnect"), onclick: () => reconnect(c) }));
+        row.append(
+          h("button", {
+            class: "btn",
+            text: t("disconnect"),
+            onclick: () => post(c, "disconnect"),
+          }),
+        );
+        row.append(
+          h("button", {
+            class: "btn",
+            text: t("reconnect"),
+            onclick: () => reconnect(c),
+          }),
+        );
       }
     }
     out.push(row);
@@ -343,12 +416,24 @@
 
   const eventsBody = (events, now) =>
     events.length
-      ? h("ul", { class: "list" },
+      ? h(
+          "ul",
+          { class: "list" },
           [...events].reverse().map((e) =>
-            h("li", {},
-              h("div", { class: "grow" },
-                h("div", { text: `${e.type}${e.message ? " – " + e.message : ""}` }),
-                h("div", { class: "mono", text: fmtDate(e.ts) })))))
+            h(
+              "li",
+              {},
+              h(
+                "div",
+                { class: "grow" },
+                h("div", {
+                  text: `${e.type}${e.message ? " – " + e.message : ""}`,
+                }),
+                h("div", { class: "mono", text: fmtDate(e.ts) }),
+              ),
+            ),
+          ),
+        )
       : h("p", { class: "muted", text: t("eventsNone") });
 
   const showDetail = async (id) => {
@@ -362,7 +447,12 @@
     const groupsBox = h("div", { hidden: true });
     const eventsBox = h("div", { hidden: true });
     const settingsBox = h("div", { hidden: true });
-    const sections = { overview, groups: groupsBox, events: eventsBox, settings: settingsBox };
+    const sections = {
+      overview,
+      groups: groupsBox,
+      events: eventsBox,
+      settings: settingsBox,
+    };
     const tabLabels = {
       overview: t("tabOverview"),
       groups: t("tabGroups"),
@@ -384,7 +474,12 @@
       }
     };
     Object.keys(sections).forEach((k) => {
-      tabButtons[k] = h("button", { class: "tab", role: "tab", text: tabLabels[k], onclick: () => select(k) });
+      tabButtons[k] = h("button", {
+        class: "tab",
+        role: "tab",
+        text: tabLabels[k],
+        onclick: () => select(k),
+      });
       tabs.append(tabButtons[k]);
     });
 
@@ -397,49 +492,84 @@
       oninput: () => renderGroups(),
     });
     const groupList = h("div", {});
-    const groupRefresh = h("button", { class: "btn", text: t("refresh"), onclick: () => loadGroups(true) });
+    const groupRefresh = h("button", {
+      class: "btn",
+      text: t("refresh"),
+      onclick: () => loadGroups(true),
+    });
     groupsBox.append(
       h("p", { class: "muted", text: t("groupsHint") }),
       h("div", { class: "row" }, groupSearch, groupRefresh),
-      groupList
+      groupList,
     );
 
     const renderGroups = () => {
       const q = groupSearch.value.trim().toLowerCase();
-      const shown = groups.filter((g) => !q || g.subject.toLowerCase().includes(q) || g.id.includes(q));
+      const shown = groups.filter(
+        (g) => !q || g.subject.toLowerCase().includes(q) || g.id.includes(q),
+      );
       groupList.replaceChildren(
         shown.length
-          ? h("ul", { class: "list" },
+          ? h(
+              "ul",
+              { class: "list" },
               shown.map((g) =>
-                h("li", {},
-                  h("div", { class: "grow" },
+                h(
+                  "li",
+                  {},
+                  h(
+                    "div",
+                    { class: "grow" },
                     h("div", { text: g.subject || g.id }),
-                    h("div", { class: "mono", text: `${g.id} · ${t("members", { n: g.participants })}` })),
-                  h("button", { class: "btn", text: t("copy"), onclick: () => copyText(g.id) }))))
-          : h("p", { class: "muted", text: t("groupsNone") })
+                    h("div", {
+                      class: "mono",
+                      text: `${g.id} · ${t("members", { n: g.participants })}`,
+                    }),
+                  ),
+                  h("button", {
+                    class: "btn",
+                    text: t("copy"),
+                    onclick: () => copyText(g.id),
+                  }),
+                ),
+              ),
+            )
+          : h("p", { class: "muted", text: t("groupsNone") }),
       );
     };
 
     const loadGroups = async (refreshFlag) => {
       const cur = find(id);
       if (!cur || cur.state !== "connected") {
-        groupList.replaceChildren(h("p", { class: "muted", text: t("groupsOffline") }));
+        groupList.replaceChildren(
+          h("p", { class: "muted", text: t("groupsOffline") }),
+        );
         groupsLoaded = false;
         return;
       }
       groupList.replaceChildren(h("p", { class: "muted", text: "…" }));
       try {
-        const res = await api("GET", `clients/${encodeURIComponent(id)}/groups${refreshFlag ? "?refresh=1" : ""}`);
+        const res = await api(
+          "GET",
+          `clients/${encodeURIComponent(id)}/groups${refreshFlag ? "?refresh=1" : ""}`,
+        );
         groups = res.groups;
         renderGroups();
       } catch (e) {
         groupsLoaded = false;
-        groupList.replaceChildren(h("p", { class: "muted", text: t("failed", { msg: e.message }) }));
+        groupList.replaceChildren(
+          h("p", { class: "muted", text: t("failed", { msg: e.message }) }),
+        );
       }
     };
 
     // settings tab
-    const labelInput = h("input", { type: "text", maxlength: "64", id: "set-label", value: c.label || "" });
+    const labelInput = h("input", {
+      type: "text",
+      maxlength: "64",
+      id: "set-label",
+      value: c.label || "",
+    });
     const enabledBox = h("input", {
       type: "checkbox",
       id: "set-enabled",
@@ -447,30 +577,51 @@
       onchange: () => setEnabled(find(id), enabledBox.checked),
     });
     settingsBox.append(
-      h("div", { class: "field" },
+      h(
+        "div",
+        { class: "field" },
         h("label", { for: "set-label", text: t("settingsLabel") }),
-        h("div", { class: "row" },
+        h(
+          "div",
+          { class: "row" },
           labelInput,
           h("button", {
             class: "btn",
             text: t("save"),
             onclick: () =>
-              run(() => api("PATCH", `clients/${encodeURIComponent(id)}`, { label: labelInput.value }), t("saved")),
-          }))),
-      h("div", { class: "switch-row" },
+              run(
+                () =>
+                  api("PATCH", `clients/${encodeURIComponent(id)}`, {
+                    label: labelInput.value,
+                  }),
+                t("saved"),
+              ),
+          }),
+        ),
+      ),
+      h(
+        "div",
+        { class: "switch-row" },
         enabledBox,
-        h("label", { for: "set-enabled" },
+        h(
+          "label",
+          { for: "set-enabled" },
           h("div", { text: t("settingsEnabled") }),
-          h("div", { class: "muted", text: t("settingsEnabledHint") }))),
+          h("div", { class: "muted", text: t("settingsEnabledHint") }),
+        ),
+      ),
       h("h3", { text: t("dangerZone") }),
-      h("div", { class: "row" },
+      h(
+        "div",
+        { class: "row" },
         h("button", {
           class: "btn danger",
           text: t("remove"),
           onclick: async () => {
             if (await doRemove(find(id) || c)) dlg.close();
           },
-        }))
+        }),
+      ),
     );
 
     panel.append(tabs, overview, groupsBox, eventsBox, settingsBox);
@@ -502,29 +653,44 @@
   // ---- main view ---------------------------------------------------
 
   const tile = (cls, num, label, extra) =>
-    h("div", { class: "tile " + cls },
+    h(
+      "div",
+      { class: "tile " + cls },
       h("div", { class: "num", text: num }),
       h("div", { class: "label", text: label }),
-      extra ? h("div", { class: "extra muted", text: extra }) : null);
+      extra ? h("div", { class: "extra muted", text: extra }) : null,
+    );
 
   const clientRow = (c, now) => {
     const primary =
       c.state === "qr_required"
-        ? h("button", { class: "btn primary", text: t("showQr"), onclick: () => showQr(c.id) })
+        ? h("button", {
+            class: "btn primary",
+            text: t("showQr"),
+            onclick: () => showQr(c.id),
+          })
         : c.state === "auth_invalid"
-        ? h("button", { class: "btn primary", text: t("reauth"), onclick: () => doReauth(c) })
-        : null;
+          ? h("button", {
+              class: "btn primary",
+              text: t("reauth"),
+              onclick: () => doReauth(c),
+            })
+          : null;
 
     const menuItems = [];
     if (c.enabled) {
-      if (c.state === "stopped") menuItems.push([t("connect"), () => post(c, "connect")]);
+      if (c.state === "stopped")
+        menuItems.push([t("connect"), () => post(c, "connect")]);
       else if (c.state !== "auth_invalid") {
         menuItems.push([t("disconnect"), () => post(c, "disconnect")]);
         menuItems.push([t("reconnect"), () => reconnect(c)]);
       }
       menuItems.push([t("reauth"), () => doReauth(c)]);
     }
-    menuItems.push([c.enabled ? t("disable") : t("enable"), () => setEnabled(c, !c.enabled)]);
+    menuItems.push([
+      c.enabled ? t("disable") : t("enable"),
+      () => setEnabled(c, !c.enabled),
+    ]);
     menuItems.push([t("remove"), () => doRemove(c), true]);
 
     const menuBtn = h("button", {
@@ -533,15 +699,26 @@
       "aria-haspopup": "menu",
       text: "⋮",
     });
-    const wrapper = h("div", { class: "actions" }, primary,
-      h("button", { class: "btn", text: t("details"), onclick: () => showDetail(c.id) }), menuBtn);
+    const wrapper = h(
+      "div",
+      { class: "actions" },
+      primary,
+      h("button", {
+        class: "btn",
+        text: t("details"),
+        onclick: () => showDetail(c.id),
+      }),
+      menuBtn,
+    );
 
     menuBtn.onclick = (ev) => {
       ev.stopPropagation();
       const had = openMenu && openMenu.owner === c.id;
       closeMenu();
       if (had) return;
-      const menu = h("div", { class: "menu", role: "menu" },
+      const menu = h(
+        "div",
+        { class: "menu", role: "menu" },
         menuItems.map(([label, fn, danger]) =>
           h("button", {
             role: "menuitem",
@@ -551,7 +728,9 @@
               closeMenu();
               fn();
             },
-          })));
+          }),
+        ),
+      );
       wrapper.append(menu);
       openMenu = { owner: c.id, el: menu };
     };
@@ -559,16 +738,37 @@
     const cell = (label, ...content) =>
       h("div", {}, h("div", { class: "cell-label", text: label }), ...content);
 
-    return h("div", { class: "client", "data-id": c.id },
-      cell(t("colName"),
+    return h(
+      "div",
+      { class: "client", "data-id": c.id },
+      cell(
+        t("colName"),
         h("div", { class: "name", text: name(c) }),
-        c.label ? h("div", { class: "muted", text: c.id }) : null),
-      cell(t("colStatus"), chip(c.state),
-        c.inactivityWarning ? h("div", { class: "muted", text: "⚠ " + t("inactive", { n: state.settings.inactivity_warning_days }) }) : null),
+        c.label ? h("div", { class: "muted", text: c.id }) : null,
+      ),
+      cell(
+        t("colStatus"),
+        chip(c.state),
+        c.inactivityWarning
+          ? h("div", {
+              class: "muted",
+              text:
+                "⚠ " +
+                t("inactive", { n: state.settings.inactivity_warning_days }),
+            })
+          : null,
+      ),
       cell(t("colPhone"), c.phone ? "+" + c.phone : "–"),
-      cell(t("colActivity"), c.lastActivity ? fmtAgo(c.lastActivity, now) : "–"),
-      cell(t("colMessages"), `↑ ${c.counters.todaySent}  ↓ ${c.counters.todayIncoming}`),
-      wrapper);
+      cell(
+        t("colActivity"),
+        c.lastActivity ? fmtAgo(c.lastActivity, now) : "–",
+      ),
+      cell(
+        t("colMessages"),
+        `↑ ${c.counters.todaySent}  ↓ ${c.counters.todayIncoming}`,
+      ),
+      wrapper,
+    );
   };
 
   const closeMenu = () => {
@@ -604,21 +804,44 @@
     const renderList = () => {
       closeMenu();
       const q = filter.trim().toLowerCase();
-      const shown = s.clients.filter((c) => !q || c.id.toLowerCase().includes(q) || (c.label || "").toLowerCase().includes(q) || (c.phone || "").includes(q));
+      const shown = s.clients.filter(
+        (c) =>
+          !q ||
+          c.id.toLowerCase().includes(q) ||
+          (c.label || "").toLowerCase().includes(q) ||
+          (c.phone || "").includes(q),
+      );
       list.replaceChildren(
         ...(shown.length
           ? shown.map((c) => clientRow(c, now))
-          : [h("p", { class: "muted", text: s.clients.length ? t("noMatch") : t("noClients") })])
+          : [
+              h("p", {
+                class: "muted",
+                text: s.clients.length ? t("noMatch") : t("noClients"),
+              }),
+            ]),
       );
     };
 
-    const statusBox = h("label", { class: "switch-row" },
+    const statusBox = h(
+      "label",
+      { class: "switch-row" },
       h("input", {
         type: "checkbox",
         checked: s.settings.receive_status,
-        onchange: (e) => run(() => api("PUT", "settings", { receive_status: e.target.checked }), t("saved")),
+        onchange: (e) =>
+          run(
+            () => api("PUT", "settings", { receive_status: e.target.checked }),
+            t("saved"),
+          ),
       }),
-      h("span", {}, h("div", { text: t("optStatus") }), h("div", { class: "muted", text: t("optStatusHint") })));
+      h(
+        "span",
+        {},
+        h("div", { text: t("optStatus") }),
+        h("div", { class: "muted", text: t("optStatusHint") }),
+      ),
+    );
 
     const days = h("input", {
       type: "number",
@@ -627,57 +850,161 @@
       value: String(s.settings.inactivity_warning_days),
       "aria-label": t("optInactivity"),
       style: "width: 90px",
-      onchange: (e) => run(() => api("PUT", "settings", { inactivity_warning_days: parseInt(e.target.value, 10) }), t("saved")),
+      onchange: (e) =>
+        run(
+          () =>
+            api("PUT", "settings", {
+              inactivity_warning_days: parseInt(e.target.value, 10),
+            }),
+          t("saved"),
+        ),
     });
 
     const problemsCard = tt.problems.length
-      ? h("section", { class: "card problems" },
+      ? h(
+          "section",
+          { class: "card problems" },
           h("h2", { text: t("problemsTitle") }),
           tt.problems.map((p) => {
             const c = find(p.id);
-            return h("div", { class: "problem" },
-              h("div", {}, h("b", { text: p.label || p.id }), " ",
+            return h(
+              "div",
+              { class: "problem" },
+              h(
+                "div",
+                {},
+                h("b", { text: p.label || p.id }),
+                " ",
                 p.state !== "connected" ? chip(p.state) : null,
-                p.inactivityWarning ? h("span", { class: "muted", text: " ⚠ " + t("inactive", { n: s.settings.inactivity_warning_days }) }) : null,
-                p.lastError ? h("span", { class: "muted", text: " · " + p.lastError }) : null),
+                p.inactivityWarning
+                  ? h("span", {
+                      class: "muted",
+                      text:
+                        " ⚠ " +
+                        t("inactive", {
+                          n: s.settings.inactivity_warning_days,
+                        }),
+                    })
+                  : null,
+                p.lastError
+                  ? h("span", { class: "muted", text: " · " + p.lastError })
+                  : null,
+              ),
               c && c.state === "qr_required"
-                ? h("button", { class: "btn primary", text: t("showQr"), onclick: () => showQr(c.id) })
+                ? h("button", {
+                    class: "btn primary",
+                    text: t("showQr"),
+                    onclick: () => showQr(c.id),
+                  })
                 : c && c.state === "auth_invalid"
-                ? h("button", { class: "btn primary", text: t("reauth"), onclick: () => doReauth(c) })
-                : null);
-          }))
+                  ? h("button", {
+                      class: "btn primary",
+                      text: t("reauth"),
+                      onclick: () => doReauth(c),
+                    })
+                  : null,
+            );
+          }),
+        )
       : null;
 
-    app.replaceChildren(...[
-      h("div", { class: "header" },
-        h("div", {}, h("h1", { text: t("title") }), h("div", { class: "sub", text: t("subtitle") })),
-        h("div", { class: "chip-service" },
-          h("b", { text: t("serviceRunning") }),
-          h("span", { class: "muted", text: `${tt.clients === 1 ? t("clientsOne") : t("clientsN", { n: tt.clients })} · ${t("upFor", { t: duration(now - s.service.startedAt) })}` }))),
-      h("div", { class: "tiles" },
-        tile("", tt.clients, t("tileClients"), t("tileConnected", { n: tt.connected })),
-        tile(tt.needsAuth ? "warn" : "", tt.needsAuth, t("tileNeedsAuth")),
-        tile("", `↑ ${tt.todaySent}  ↓ ${tt.todayIncoming}`, t("tileToday"), `${t("sent")} / ${t("received")}`),
-        tile("", `↑ ${tt.sent}  ↓ ${tt.incoming}`, t("tileTotal"), tt.failed ? t("tileFailed", { n: tt.failed }) : `${t("sent")} / ${t("received")}`),
-        tile(tt.problems.length ? "err" : "", tt.problems.length, t("tileProblems"))),
-      problemsCard,
-      h("section", { class: "card" },
-        h("div", { class: "toolbar" },
-          h("h2", { text: t("clients") }),
-          h("div", { class: "right" }, searchInput,
-            h("button", { class: "btn primary", text: "+ " + t("addClient"), onclick: showAdd }))),
-        h("div", { class: "clients-head" },
-          h("div", { text: t("colName") }), h("div", { text: t("colStatus") }), h("div", { text: t("colPhone") }),
-          h("div", { text: t("colActivity") }), h("div", { text: t("colMessages") }), h("div")),
-        list),
-      h("section", { class: "card" },
-        h("h2", { text: t("globalSettings") }),
-        statusBox,
-        h("div", { class: "field" },
-          h("label", { text: t("optInactivity") }),
-          days,
-          h("span", { class: "muted", text: t("optInactivityHint") })))
-    ].filter(Boolean));
+    app.replaceChildren(
+      ...[
+        h(
+          "div",
+          { class: "header" },
+          h(
+            "div",
+            {},
+            h("h1", { text: t("title") }),
+            h("div", { class: "sub", text: t("subtitle") }),
+          ),
+          h(
+            "div",
+            { class: "chip-service" },
+            h("b", { text: t("serviceRunning") }),
+            h("span", {
+              class: "muted",
+              text: `${tt.clients === 1 ? t("clientsOne") : t("clientsN", { n: tt.clients })} · ${t("upFor", { t: duration(now - s.service.startedAt) })}`,
+            }),
+          ),
+        ),
+        h(
+          "div",
+          { class: "tiles" },
+          tile(
+            "",
+            tt.clients,
+            t("tileClients"),
+            t("tileConnected", { n: tt.connected }),
+          ),
+          tile(tt.needsAuth ? "warn" : "", tt.needsAuth, t("tileNeedsAuth")),
+          tile(
+            "",
+            `↑ ${tt.todaySent}  ↓ ${tt.todayIncoming}`,
+            t("tileToday"),
+            `${t("sent")} / ${t("received")}`,
+          ),
+          tile(
+            "",
+            `↑ ${tt.sent}  ↓ ${tt.incoming}`,
+            t("tileTotal"),
+            tt.failed
+              ? t("tileFailed", { n: tt.failed })
+              : `${t("sent")} / ${t("received")}`,
+          ),
+          tile(
+            tt.problems.length ? "err" : "",
+            tt.problems.length,
+            t("tileProblems"),
+          ),
+        ),
+        problemsCard,
+        h(
+          "section",
+          { class: "card" },
+          h(
+            "div",
+            { class: "toolbar" },
+            h("h2", { text: t("clients") }),
+            h(
+              "div",
+              { class: "right" },
+              searchInput,
+              h("button", {
+                class: "btn primary",
+                text: "+ " + t("addClient"),
+                onclick: showAdd,
+              }),
+            ),
+          ),
+          h(
+            "div",
+            { class: "clients-head" },
+            h("div", { text: t("colName") }),
+            h("div", { text: t("colStatus") }),
+            h("div", { text: t("colPhone") }),
+            h("div", { text: t("colActivity") }),
+            h("div", { text: t("colMessages") }),
+            h("div"),
+          ),
+          list,
+        ),
+        h(
+          "section",
+          { class: "card" },
+          h("h2", { text: t("globalSettings") }),
+          statusBox,
+          h(
+            "div",
+            { class: "field" },
+            h("label", { text: t("optInactivity") }),
+            days,
+            h("span", { class: "muted", text: t("optInactivityHint") }),
+          ),
+        ),
+      ].filter(Boolean),
+    );
     renderList();
     if (hadFocus) searchInput.focus();
   };
@@ -698,7 +1025,10 @@
       const sig = JSON.stringify([state.clients, state.totals, state.settings]);
       const stale = Date.now() - lastRender > 30000;
       const busy = document.querySelector("dialog[open]") || openMenu;
-      if (!document.getElementById("client-list") || (!busy && (sig !== lastSig || stale))) {
+      if (
+        !document.getElementById("client-list") ||
+        (!busy && (sig !== lastSig || stale))
+      ) {
         lastSig = sig;
         lastRender = Date.now();
         render();
@@ -708,7 +1038,10 @@
     } catch (e) {
       if (!state) {
         document.getElementById("app").replaceChildren(
-          h("p", { class: "muted", text: t("loadError", { msg: e.message }) })
+          h("p", {
+            class: "muted",
+            text: t("loadError", { msg: e.message }),
+          }),
         );
       }
     } finally {

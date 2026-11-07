@@ -29,7 +29,9 @@ class Notifier {
         headers: { Authorization: `Bearer ${this.#token}` },
       });
     } catch (error) {
-      this.#logger.error(`Request to Home Assistant (${path}) failed: ${error.message}`);
+      this.#logger.error(
+        `Request to Home Assistant (${path}) failed: ${error.message}`,
+      );
     }
   }
 

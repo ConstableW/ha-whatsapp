@@ -12,7 +12,14 @@ const { createApp } = require("../lib/server");
 const { createDemo } = require("./demo");
 
 const lang = process.argv[2] === "de" ? "de" : "en";
-const outDir = path.join(__dirname, "..", "..", "docs", "images", lang === "de" ? "de" : "");
+const outDir = path.join(
+  __dirname,
+  "..",
+  "..",
+  "docs",
+  "images",
+  lang === "de" ? "de" : "",
+);
 const BROWSERS = [
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
   "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -58,7 +65,10 @@ const cdp = async (wsUrl) => {
     manager: env.manager,
     logger: silentLogger,
     adminIps: ["127.0.0.1", "::1"],
-    info: { version: "demo", startedAt: Date.now() - (4 * 60 + 26) * 60 * 1000 },
+    info: {
+      version: "demo",
+      startedAt: Date.now() - (4 * 60 + 26) * 60 * 1000,
+    },
   });
   const server = await new Promise((r) => {
     const s = app.listen(0, "127.0.0.1", () => r(s));
@@ -67,23 +77,31 @@ const cdp = async (wsUrl) => {
 
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "wa-shot-"));
   const port = 9300 + Math.floor(Math.random() * 500);
-  const chrome = spawn(exe, [
-    "--headless=new",
-    "--disable-gpu",
-    "--no-first-run",
-    "--hide-scrollbars",
-    `--lang=${lang === "de" ? "de-DE" : "en-US"}`,
-    `--user-data-dir=${profile}`,
-    `--remote-debugging-port=${port}`,
-    "about:blank",
-  ], { stdio: "ignore" });
+  const chrome = spawn(
+    exe,
+    [
+      "--headless=new",
+      "--disable-gpu",
+      "--no-first-run",
+      "--hide-scrollbars",
+      `--lang=${lang === "de" ? "de-DE" : "en-US"}`,
+      `--user-data-dir=${profile}`,
+      `--remote-debugging-port=${port}`,
+      "about:blank",
+    ],
+    { stdio: "ignore" },
+  );
 
   const cleanup = () => {
-    try { chrome.kill(); } catch (e) {}
+    try {
+      chrome.kill();
+    } catch (e) {}
     server.close();
     // Chrome may still hold files for a moment (Windows): best effort only.
     setTimeout(() => {
-      try { fs.rmSync(profile, { recursive: true, force: true, maxRetries: 5 }); } catch (e) {}
+      try {
+        fs.rmSync(profile, { recursive: true, force: true, maxRetries: 5 });
+      } catch (e) {}
     }, 1500);
   };
 
@@ -91,7 +109,9 @@ const cdp = async (wsUrl) => {
     let targets;
     for (let i = 0; i < 50; i++) {
       try {
-        targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+        targets = await (
+          await fetch(`http://127.0.0.1:${port}/json/list`)
+        ).json();
         if (targets.some((t) => t.type === "page")) break;
       } catch (e) {}
       await sleep(200);
@@ -101,7 +121,13 @@ const cdp = async (wsUrl) => {
     await c.send("Page.enable");
 
     const evaluate = async (expression) =>
-      (await c.send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true })).result.value;
+      (
+        await c.send("Runtime.evaluate", {
+          expression,
+          returnByValue: true,
+          awaitPromise: true,
+        })
+      ).result.value;
     const waitFor = async (expression, ms = 8000) => {
       const end = Date.now() + ms;
       while (Date.now() < end) {
@@ -112,10 +138,15 @@ const cdp = async (wsUrl) => {
     };
     const viewport = (width, height, mobile = false) =>
       c.send("Emulation.setDeviceMetricsOverride", {
-        width, height, deviceScaleFactor: mobile ? 2 : 1.5, mobile,
+        width,
+        height,
+        deviceScaleFactor: mobile ? 2 : 1.5,
+        mobile,
       });
     const shot = async (name) => {
-      const { data } = await c.send("Page.captureScreenshot", { format: "png" });
+      const { data } = await c.send("Page.captureScreenshot", {
+        format: "png",
+      });
       fs.writeFileSync(path.join(outDir, name), Buffer.from(data, "base64"));
       console.log("wrote", path.join(outDir, name));
     };
@@ -131,9 +162,12 @@ const cdp = async (wsUrl) => {
       evaluate(`(() => { const el = [...document.querySelectorAll(${JSON.stringify(selector)})]
         .find((e) => new RegExp(${JSON.stringify(re)}, "i").test(e.textContent));
         if (!el) return false; el.click(); return true; })()`);
-    const closeDialog = () => evaluate("document.querySelectorAll('dialog').forEach((d) => d.close())");
+    const closeDialog = () =>
+      evaluate("document.querySelectorAll('dialog').forEach((d) => d.close())");
 
-    await c.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: "dark" }] });
+    await c.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-color-scheme", value: "dark" }],
+    });
     await c.send("Page.navigate", { url });
     await waitFor("!!document.querySelector('.client')");
     await sleep(500);
@@ -145,13 +179,18 @@ const cdp = async (wsUrl) => {
     await viewport(1180, 760);
     const qrLabel = lang === "de" ? "QR anzeigen" : "Show QR code";
     await clickText("button", qrLabel);
-    await waitFor("(() => { const i = document.querySelector('dialog img'); return !!i && i.complete && i.naturalWidth > 0; })()");
+    await waitFor(
+      "(() => { const i = document.querySelector('dialog img'); return !!i && i.complete && i.naturalWidth > 0; })()",
+    );
     await sleep(300);
     await shot("panel-qr.png");
     await closeDialog();
 
     // 3. details of the first client: overview, groups, events
-    await clickText(".client button", lang === "de" ? "^Details$" : "^Details$");
+    await clickText(
+      ".client button",
+      lang === "de" ? "^Details$" : "^Details$",
+    );
     await waitFor("!!document.querySelector('dialog .kv')");
     await viewport(1180, 860);
     await sleep(300);
@@ -168,9 +207,14 @@ const cdp = async (wsUrl) => {
     await closeDialog();
 
     // 4. add dialog
-    await clickText("button", lang === "de" ? "Client hinzufügen" : "Add client");
+    await clickText(
+      "button",
+      lang === "de" ? "Client hinzufügen" : "Add client",
+    );
     await waitFor("!!document.querySelector('dialog input')");
-    await evaluate("document.querySelector('#add-id').value = 'garage'; document.querySelector('#add-label').value = 'Garage';");
+    await evaluate(
+      "document.querySelector('#add-id').value = 'garage'; document.querySelector('#add-label').value = 'Garage';",
+    );
     await viewport(1180, 560);
     await sleep(300);
     await shot("panel-add.png");

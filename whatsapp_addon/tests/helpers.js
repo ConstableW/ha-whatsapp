@@ -60,7 +60,10 @@ const silentLogger = { error() {}, info() {}, debug() {}, warn() {} };
 
 const fakeNotifier = () => {
   const calls = [];
-  const rec = (name) => (...args) => calls.push([name, ...args]);
+  const rec =
+    (name) =>
+    (...args) =>
+      calls.push([name, ...args]);
   return {
     calls,
     qr: rec("qr"),
@@ -78,11 +81,17 @@ const setup = ({ options, now } = {}) => {
   const optionsFile = path.join(dir, "options.json");
   fs.writeFileSync(
     optionsFile,
-    JSON.stringify(options || { clients: ["default"] })
+    JSON.stringify(options || { clients: ["default"] }),
   );
   const statsFile = path.join(dir, "stats.json");
 
-  const env = { dir, optionsFile, statsFile, clients: [], notifier: fakeNotifier() };
+  const env = {
+    dir,
+    optionsFile,
+    statsFile,
+    clients: [],
+    notifier: fakeNotifier(),
+  };
 
   const build = () => {
     const optionsStore = new OptionsStore({ file: optionsFile, token: "" });

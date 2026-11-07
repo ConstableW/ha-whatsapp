@@ -57,7 +57,8 @@ window.I18N = {
     inactive: "No connection for more than {n} days",
     addTitle: "Add client",
     fieldId: "Client ID",
-    fieldIdHint: "1–32 letters, digits, - or _. Used as clientId in services and events. Cannot be changed later.",
+    fieldIdHint:
+      "1–32 letters, digits, - or _. Used as clientId in services and events. Cannot be changed later.",
     fieldLabel: "Display name (optional)",
     create: "Create and pair",
     tabOverview: "Overview",
@@ -79,10 +80,12 @@ window.I18N = {
     cReconnects: "Reconnect attempts",
     cToday: "Today (sent / received)",
     qrTitle: "Pair {name}",
-    qrHelp: "Open WhatsApp on your phone → Linked devices → Link a device, then scan this code.",
+    qrHelp:
+      "Open WhatsApp on your phone → Linked devices → Link a device, then scan this code.",
     qrWaiting: "Waiting for the QR code …",
     qrDone: "{name} is connected.",
-    groupsHint: "Groups this account is a member of. Use the ID as target (to).",
+    groupsHint:
+      "Groups this account is a member of. Use the ID as target (to).",
     groupsSearch: "Search groups …",
     groupsNone: "No groups found.",
     groupsOffline: "Groups can only be loaded while the client is connected.",
@@ -90,18 +93,23 @@ window.I18N = {
     eventsNone: "No events yet.",
     settingsLabel: "Display name",
     settingsEnabled: "Client enabled",
-    settingsEnabledHint: "A disabled client is not connected and keeps its session.",
+    settingsEnabledHint:
+      "A disabled client is not connected and keeps its session.",
     dangerZone: "Remove",
     removeTitle: "Remove client {name}?",
-    removeText: "The client is removed from the add-on configuration, its WhatsApp device is unlinked and its session and statistics are deleted. This cannot be undone. Type the client ID to confirm.",
+    removeText:
+      "The client is removed from the add-on configuration, its WhatsApp device is unlinked and its session and statistics are deleted. This cannot be undone. Type the client ID to confirm.",
     reauthTitle: "Re-authenticate {name}?",
-    reauthText: "The current session is discarded and a new QR code has to be scanned. Other clients are not affected.",
+    reauthText:
+      "The current session is discarded and a new QR code has to be scanned. Other clients are not affected.",
     confirm: "Confirm",
     globalSettings: "General settings",
     optStatus: "Receive status updates",
-    optStatusHint: "Forward WhatsApp statuses (stories) as new_whatsapp_message events. Off by default.",
+    optStatusHint:
+      "Forward WhatsApp statuses (stories) as new_whatsapp_message events. Off by default.",
     optInactivity: "Inactivity warning after (days)",
-    optInactivityHint: "Warn when a client has had no connection for this long. 0 turns the warning off.",
+    optInactivityHint:
+      "Warn when a client has had no connection for this long. 0 turns the warning off.",
     saved: "Saved",
     failed: "Failed: {msg}",
     loadError: "Could not load data: {msg}",
@@ -163,7 +171,8 @@ window.I18N = {
     inactive: "Seit mehr als {n} Tagen keine Verbindung",
     addTitle: "Client hinzufügen",
     fieldId: "Client-ID",
-    fieldIdHint: "1–32 Buchstaben, Ziffern, - oder _. Wird in Services und Events als clientId verwendet und lässt sich später nicht ändern.",
+    fieldIdHint:
+      "1–32 Buchstaben, Ziffern, - oder _. Wird in Services und Events als clientId verwendet und lässt sich später nicht ändern.",
     fieldLabel: "Anzeigename (optional)",
     create: "Anlegen und koppeln",
     tabOverview: "Übersicht",
@@ -185,29 +194,37 @@ window.I18N = {
     cReconnects: "Wiederverbindungsversuche",
     cToday: "Heute (gesendet / empfangen)",
     qrTitle: "{name} koppeln",
-    qrHelp: "WhatsApp auf dem Handy öffnen → Verknüpfte Geräte → Gerät hinzufügen und diesen Code scannen.",
+    qrHelp:
+      "WhatsApp auf dem Handy öffnen → Verknüpfte Geräte → Gerät hinzufügen und diesen Code scannen.",
     qrWaiting: "Warte auf den QR-Code …",
     qrDone: "{name} ist verbunden.",
-    groupsHint: "Gruppen, in denen dieser Account Mitglied ist. Die ID wird als Ziel (to) verwendet.",
+    groupsHint:
+      "Gruppen, in denen dieser Account Mitglied ist. Die ID wird als Ziel (to) verwendet.",
     groupsSearch: "Gruppen suchen …",
     groupsNone: "Keine Gruppen gefunden.",
-    groupsOffline: "Gruppen lassen sich nur laden, solange der Client verbunden ist.",
+    groupsOffline:
+      "Gruppen lassen sich nur laden, solange der Client verbunden ist.",
     members: "{n} Mitglieder",
     eventsNone: "Noch keine Ereignisse.",
     settingsLabel: "Anzeigename",
     settingsEnabled: "Client aktiviert",
-    settingsEnabledHint: "Ein deaktivierter Client wird nicht verbunden und behält seine Sitzung.",
+    settingsEnabledHint:
+      "Ein deaktivierter Client wird nicht verbunden und behält seine Sitzung.",
     dangerZone: "Entfernen",
     removeTitle: "Client {name} entfernen?",
-    removeText: "Der Client wird aus der Add-on-Konfiguration entfernt, sein WhatsApp-Gerät wird abgemeldet, Sitzung und Statistik werden gelöscht. Das lässt sich nicht rückgängig machen. Zur Bestätigung die Client-ID eingeben.",
+    removeText:
+      "Der Client wird aus der Add-on-Konfiguration entfernt, sein WhatsApp-Gerät wird abgemeldet, Sitzung und Statistik werden gelöscht. Das lässt sich nicht rückgängig machen. Zur Bestätigung die Client-ID eingeben.",
     reauthTitle: "{name} neu authentifizieren?",
-    reauthText: "Die aktuelle Sitzung wird verworfen und ein neuer QR-Code muss gescannt werden. Andere Clients sind nicht betroffen.",
+    reauthText:
+      "Die aktuelle Sitzung wird verworfen und ein neuer QR-Code muss gescannt werden. Andere Clients sind nicht betroffen.",
     confirm: "Bestätigen",
     globalSettings: "Allgemeine Einstellungen",
     optStatus: "Status-Updates empfangen",
-    optStatusHint: "WhatsApp-Status (Stories) als new_whatsapp_message-Event weiterleiten. Standardmäßig aus.",
+    optStatusHint:
+      "WhatsApp-Status (Stories) als new_whatsapp_message-Event weiterleiten. Standardmäßig aus.",
     optInactivity: "Inaktivitätswarnung nach (Tagen)",
-    optInactivityHint: "Warnt, wenn ein Client so lange keine Verbindung hatte. 0 schaltet die Warnung aus.",
+    optInactivityHint:
+      "Warnt, wenn ein Client so lange keine Verbindung hatte. 0 schaltet die Warnung aus.",
     saved: "Gespeichert",
     failed: "Fehlgeschlagen: {msg}",
     loadError: "Daten konnten nicht geladen werden: {msg}",

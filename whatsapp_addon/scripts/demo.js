@@ -28,7 +28,10 @@ const createDemo = () => {
   statsStore.inc("office", "incoming", 240);
 
   // default: a short connection loss a few hours ago, connected since.
-  c("default").getAccount = () => ({ phone: "4915200000001", name: "Anna Example" });
+  c("default").getAccount = () => ({
+    phone: "4915200000001",
+    name: "Anna Example",
+  });
   frozen = Date.now() - 5 * H;
   c("default").emit("ready");
   frozen = Date.now() - 3.2 * H;
@@ -39,10 +42,17 @@ const createDemo = () => {
   c("default").emit("ready");
   frozen = Date.now() - 2 * H;
   statsStore.inc("default", "failed", 1);
-  statsStore.addEvent("default", "send_failed", "Number 4915200000099 is not on Whatsapp.");
+  statsStore.addEvent(
+    "default",
+    "send_failed",
+    "Number 4915200000099 is not on Whatsapp.",
+  );
 
   // office: connected for longer, less traffic.
-  c("office").getAccount = () => ({ phone: "4915200000002", name: "Office Bot" });
+  c("office").getAccount = () => ({
+    phone: "4915200000002",
+    name: "Office Bot",
+  });
   frozen = Date.now() - 8 * H;
   c("office").emit("ready");
 
@@ -63,11 +73,23 @@ const createDemo = () => {
   c("default").groups = [
     { id: "120363000000000001@g.us", subject: "Family", participants: 6 },
     { id: "120363000000000002@g.us", subject: "Neighbours", participants: 14 },
-    { id: "120363000000000003@g.us", subject: "Smart Home Club", participants: 9 },
-    { id: "120363000000000004@g.us", subject: "Sunday Football", participants: 21 },
+    {
+      id: "120363000000000003@g.us",
+      subject: "Smart Home Club",
+      participants: 9,
+    },
+    {
+      id: "120363000000000004@g.us",
+      subject: "Sunday Football",
+      participants: 21,
+    },
   ];
   c("office").groups = [
-    { id: "120363000000000005@g.us", subject: "Facility Management", participants: 5 },
+    {
+      id: "120363000000000005@g.us",
+      subject: "Facility Management",
+      participants: 5,
+    },
   ];
 
   live = true;

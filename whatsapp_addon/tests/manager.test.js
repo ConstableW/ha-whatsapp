@@ -42,14 +42,20 @@ test("states follow the connection events and counters are kept", () => {
   c.emit("reconnecting", 1);
   assert.equal(state(), "reconnecting");
   c.emit("connecting");
-  assert.equal(state(), "reconnecting", "a drop is not shown as a fresh connect");
+  assert.equal(
+    state(),
+    "reconnecting",
+    "a drop is not shown as a fresh connect",
+  );
   c.emit("ready");
   assert.equal(state(), "connected");
 
   const k = env.manager.summary("default").counters;
   assert.equal(k.disconnects, 1);
   assert.equal(k.reconnects, 1);
-  assert.ok(env.statsStore.get("default").events.some((e) => e.type === "disconnected"));
+  assert.ok(
+    env.statsStore.get("default").events.some((e) => e.type === "disconnected"),
+  );
   env.cleanup();
 });
 
@@ -118,15 +124,24 @@ test("a removed client does not come back after a restart", async () => {
   assert.ok(!fs.existsSync(aDir));
 
   env.restart();
-  assert.deepEqual(env.manager.list().map((c) => c.id), ["b"]);
+  assert.deepEqual(
+    env.manager.list().map((c) => c.id),
+    ["b"],
+  );
   assert.equal(env.statsStore.get("a").sent, 0);
   env.cleanup();
 });
 
 test("add validates, persists and starts pairing", async () => {
   const env = setup();
-  await assert.rejects(() => env.manager.add({ id: "bad id" }), /Invalid client ID/);
-  await assert.rejects(() => env.manager.add({ id: "default" }), /already exists/);
+  await assert.rejects(
+    () => env.manager.add({ id: "bad id" }),
+    /Invalid client ID/,
+  );
+  await assert.rejects(
+    () => env.manager.add({ id: "default" }),
+    /already exists/,
+  );
 
   const created = await env.manager.add({ id: "work", label: "  Office  " });
   assert.equal(created.label, "Office");
@@ -188,15 +203,23 @@ test("send results are counted", async () => {
   await env.manager.sendMessage("default", "1@s.whatsapp.net", { text: "hi" });
   c.failNext = new Error("number not on WhatsApp");
   await assert.rejects(() =>
-    env.manager.sendMessage("default", "1@s.whatsapp.net", { text: "hi" })
+    env.manager.sendMessage("default", "1@s.whatsapp.net", { text: "hi" }),
   );
   const k = env.manager.summary("default").counters;
   assert.equal(k.sent, 1);
   assert.equal(k.failed, 1);
-  assert.ok(env.statsStore.get("default").events.some((e) => e.type === "send_failed"));
-  await assert.rejects(() => env.manager.sendMessage("nope", "1", {}), /not found/);
+  assert.ok(
+    env.statsStore.get("default").events.some((e) => e.type === "send_failed"),
+  );
+  await assert.rejects(
+    () => env.manager.sendMessage("nope", "1", {}),
+    /not found/,
+  );
   env.manager.disconnect("default");
-  await assert.rejects(() => env.manager.sendMessage("default", "1", {}), /not running/);
+  await assert.rejects(
+    () => env.manager.sendMessage("default", "1", {}),
+    /not running/,
+  );
   env.cleanup();
 });
 
@@ -230,11 +253,21 @@ test("inactivity warning appears only after the configured days", () => {
 
 test("settings are validated, saved and applied to running clients", async () => {
   const env = setup();
-  await assert.rejects(() => env.manager.updateSettings({ receive_status: "yes" }));
-  await assert.rejects(() => env.manager.updateSettings({ inactivity_warning_days: 999 }));
-  await env.manager.updateSettings({ receive_status: true, inactivity_warning_days: 3 });
+  await assert.rejects(() =>
+    env.manager.updateSettings({ receive_status: "yes" }),
+  );
+  await assert.rejects(() =>
+    env.manager.updateSettings({ inactivity_warning_days: 999 }),
+  );
+  await env.manager.updateSettings({
+    receive_status: true,
+    inactivity_warning_days: 3,
+  });
   assert.equal(env.client("default").receiveStatus, true);
   env.restart();
-  assert.deepEqual(env.manager.settings, { receive_status: true, inactivity_warning_days: 3 });
+  assert.deepEqual(env.manager.settings, {
+    receive_status: true,
+    inactivity_warning_days: 3,
+  });
   env.cleanup();
 });

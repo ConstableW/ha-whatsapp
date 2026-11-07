@@ -3,20 +3,25 @@ configuration:
   clients:
     name: Clients
     description: >-
-      Namen (IDs) der WhatsApp-Sitzungen, z. B. "default". Jede Sitzung braucht
-      einen eigenen QR-Code-Scan. Die ID wird in allen Services und Events als
-      clientId verwendet.
+      Namen (IDs) der WhatsApp-Sitzungen, z. B. "default". Jede Sitzung
+      braucht einen eigenen QR-Code-Scan. Die ID wird in allen Services und
+      Events als clientId verwendet.
+  disabled_clients:
+    name: Deaktivierte Clients
+    description: >-
+      Wird im WhatsApp-Panel verwaltet. Hier aufgeführte Clients werden nicht
+      verbunden.
+  client_labels:
+    name: Anzeigenamen der Clients
+    description: Wird im WhatsApp-Panel verwaltet. Format id=Anzeigename.
   receive_status:
     name: Status-Updates empfangen
     description: >-
       WhatsApp-Status-Updates als new_whatsapp_message-Event weiterleiten.
-      Standardmäßig aus, damit Status keine Nachrichten-Automationen auslösen.
-  disabled_clients:
-    name: Deaktivierte Clients
-    description: Wird im WhatsApp-Panel verwaltet. Hier aufgeführte Clients werden nicht verbunden.
-  client_labels:
-    name: Anzeigenamen der Clients
-    description: Wird im WhatsApp-Panel verwaltet. Format id=Anzeigename.
+      Standardmäßig aus, damit Status keine Nachrichten-Automationen
+      auslösen.
   inactivity_warning_days:
     name: Inaktivitätswarnung (Tage)
-    description: Zeigt im WhatsApp-Panel eine Warnung, wenn ein Client so viele Tage keine Verbindung hatte. 0 schaltet sie aus.
+    description: >-
+      Zeigt im WhatsApp-Panel eine Warnung, wenn ein Client so viele Tage
+      keine Verbindung hatte. 0 schaltet sie aus.

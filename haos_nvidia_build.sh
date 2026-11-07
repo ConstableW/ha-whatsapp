@@ -10,6 +10,7 @@ echo "🚀 Starting Custom HAOS Build with NVIDIA RTX4060 Support..."
 
 # Variablen
 NVIDIA_DRIVER_VERSION="555.58.02"
+# shellcheck disable=SC2034
 CUDA_VERSION="12.6.0"
 WORK_DIR="$(pwd)/haos-nvidia-build"
 HAOS_DIR="$WORK_DIR/operating-system"
@@ -255,6 +256,7 @@ CONFIG_SECURITY_NETWORK=y
 EOF
 
 # Kernel Config in defconfig einbinden
+# shellcheck disable=SC2016
 echo 'BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="$(BR2_EXTERNAL_HASSOS_PATH)/board/nvidia/linux.config"' >> \
 buildroot-external/configs/nvidia_x86_64_defconfig
 
@@ -276,7 +278,7 @@ fi
 echo_info "Phase 5: Build Process starten..."
 
 # Docker Container Permission Fix
-sudo chown -R $(id -u):$(id -g) .
+sudo chown -R "$(id -u):$(id -g)" .
 
 echo_info "Starte Build Container und Build Process..."
 echo_warn "Dies kann 1-2 Stunden dauern!"

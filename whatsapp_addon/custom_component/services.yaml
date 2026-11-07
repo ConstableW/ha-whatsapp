@@ -1,3 +1,4 @@
+---
 send_message:
   name: Send message
   description: >-
@@ -55,7 +56,10 @@ set_status:
 
 presence_subscribe:
   name: Presence subscribe
-  description: Subscribe to user presence update like online, offline, typing, etc... Please first use send infinity presence update service to always appear online.
+  description: >-
+    Subscribe to user presence update like online, offline, typing, etc...
+    Please first use send infinity presence update service to always
+    appear online.
   fields:
     clientId:
       name: Client ID
@@ -106,7 +110,9 @@ send_presence_update:
 
 send_infinity_presence_update:
   name: Send infinity presence update
-  description: Send presence update like online, offline, typing, etc... for a long time
+  description: >-
+    Send presence update like online, offline, typing, etc... for a long
+    time
   fields:
     clientId:
       name: Client ID
@@ -138,7 +144,9 @@ send_infinity_presence_update:
 
 get_groups:
   name: Get groups
-  description: Returns all groups the client is a member of (id, subject, participants). Use it with "response_variable".
+  description: >-
+    Returns all groups the client is a member of (id, subject,
+    participants). Use it with "response_variable".
   fields:
     clientId:
       name: Client ID
@@ -149,7 +157,9 @@ get_groups:
         text:
     refresh:
       name: Refresh
-      description: Fetch the groups from WhatsApp again instead of using the cache (up to one minute old)
+      description: >-
+        Fetch the groups from WhatsApp again instead of using the
+        cache (up to one minute old)
       required: false
       example: false
       selector:

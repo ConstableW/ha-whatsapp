@@ -82,7 +82,9 @@ class ClientManager {
   init() {
     const { clients, skipped } = this.#options.get();
     skipped.forEach((id) =>
-      this.#logger.error(`Ignoring client with unsafe ID: ${JSON.stringify(id)}`)
+      this.#logger.error(
+        `Ignoring client with unsafe ID: ${JSON.stringify(id)}`,
+      ),
     );
 
     clients.forEach((c) => {
@@ -207,7 +209,7 @@ class ClientManager {
       this.#log(
         entry,
         "disconnected",
-        message ? `${entry.lastError}: ${message}` : entry.lastError
+        message ? `${entry.lastError}: ${message}` : entry.lastError,
       );
     });
 
@@ -257,14 +259,15 @@ class ClientManager {
     if (!isValidNewId(id)) {
       throw new ManagerError(
         "Invalid client ID. Use 1-32 letters, digits, '-' or '_'.",
-        400
+        400,
       );
     }
-    if (this.#entries.has(id)) throw new ManagerError("Client ID already exists.", 409);
+    if (this.#entries.has(id))
+      throw new ManagerError("Client ID already exists.", 409);
 
     const clean = cleanLabel(label);
     await this.#save((draft) =>
-      draft.clients.push({ id, label: clean, enabled: true })
+      draft.clients.push({ id, label: clean, enabled: true }),
     );
 
     const entry = this.#createEntry({ id, label: clean, enabled: true });
@@ -314,7 +317,10 @@ class ClientManager {
     const entry = this.#entry(id);
     if (!entry.enabled) throw new ManagerError("Client is disabled.", 409);
     if (entry.state === STATE.AUTH_INVALID) {
-      throw new ManagerError("Authentication is invalid. Re-authenticate first.", 409);
+      throw new ManagerError(
+        "Authentication is invalid. Re-authenticate first.",
+        409,
+      );
     }
     if (!entry.client) {
       entry.wasDropped = false;
@@ -379,7 +385,9 @@ class ClientManager {
     if (patch.inactivity_warning_days !== undefined) {
       const d = patch.inactivity_warning_days;
       if (!Number.isInteger(d) || d < 0 || d > 365) {
-        throw new ManagerError("inactivity_warning_days must be an integer between 0 and 365.");
+        throw new ManagerError(
+          "inactivity_warning_days must be an integer between 0 and 365.",
+        );
       }
       next.inactivity_warning_days = d;
     }
@@ -387,7 +395,9 @@ class ClientManager {
     await this.#save((draft) => {
       draft.settings = next;
     });
-    this.#entries.forEach((e) => e.client?.setReceiveStatus(next.receive_status));
+    this.#entries.forEach((e) =>
+      e.client?.setReceiveStatus(next.receive_status),
+    );
     return next;
   }
 
@@ -398,7 +408,7 @@ class ClientManager {
       this.#logger.error(`Saving add-on options failed: ${error.message}`);
       throw new ManagerError(
         `Could not save the add-on configuration: ${error.message}`,
-        502
+        502,
       );
     }
   }
@@ -408,7 +418,10 @@ class ClientManager {
   #clientFor(id) {
     const entry = this.#entry(id);
     if (!entry.client) {
-      throw new ManagerError(`Client ${id} is not running (${entry.state}).`, 409);
+      throw new ManagerError(
+        `Client ${id} is not running (${entry.state}).`,
+        409,
+      );
     }
     return { entry, client: entry.client };
   }
@@ -507,7 +520,7 @@ class ClientManager {
       clients: clients.length,
       connected: clients.filter((c) => c.state === STATE.CONNECTED).length,
       needsAuth: clients.filter(
-        (c) => c.state === STATE.QR || c.state === STATE.AUTH_INVALID
+        (c) => c.state === STATE.QR || c.state === STATE.AUTH_INVALID,
       ).length,
       incoming: sum((c) => c.counters.incoming),
       sent: sum((c) => c.counters.sent),

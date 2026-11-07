@@ -34,12 +34,7 @@ class StatsStore {
   #dirty = false;
   #timer = null;
 
-  constructor({
-    file,
-    flushMs = 30000,
-    maxEvents = 100,
-    now = Date.now,
-  } = {}) {
+  constructor({ file, flushMs = 30000, maxEvents = 100, now = Date.now } = {}) {
     this.#file = file;
     this.#flushMs = flushMs;
     this.#maxEvents = maxEvents;

@@ -3,19 +3,24 @@ configuration:
   clients:
     name: Clients
     description: >-
-      Names (IDs) of the WhatsApp sessions, e.g. "default". Every session needs
-      its own QR code scan. The ID is used as clientId in all services and events.
-  receive_status:
-    name: Receive status updates
-    description: >-
-      Forward WhatsApp status updates (stories) as new_whatsapp_message events.
-      Disabled by default so statuses do not trigger message automations.
+      Names (IDs) of the WhatsApp sessions, e.g. "default". Every session
+      needs its own QR code scan. The ID is used as clientId in all services
+      and events.
   disabled_clients:
     name: Disabled clients
-    description: Managed by the WhatsApp panel. Clients listed here are not connected.
+    description: >-
+      Managed by the WhatsApp panel. Clients listed here are not connected.
   client_labels:
     name: Client display names
     description: Managed by the WhatsApp panel. Format id=Display name.
+  receive_status:
+    name: Receive status updates
+    description: >-
+      Forward WhatsApp status updates (stories) as new_whatsapp_message
+      events. Disabled by default so statuses do not trigger message
+      automations.
   inactivity_warning_days:
     name: Inactivity warning (days)
-    description: Show a warning in the WhatsApp panel when a client had no connection for this many days. 0 turns it off.
+    description: >-
+      Show a warning in the WhatsApp panel when a client had no connection
+      for this many days. 0 turns it off.

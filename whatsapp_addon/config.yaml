@@ -1,3 +1,4 @@
+---
 name: Whatsapp
 version: "2.0.2"
 slug: whatsapp_addon
@@ -16,7 +17,6 @@ ingress: true
 ingress_port: 3000
 panel_icon: mdi:whatsapp
 panel_title: WhatsApp
-panel_admin: true
 map:
   - config:rw
   - media:rw

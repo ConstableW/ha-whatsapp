@@ -1,3 +1,5 @@
+---
+# yamllint disable rule:line-length
 name: Feature request
 description: Suggest an idea for the WhatsApp Addon
 title: "[Feature Request]: "

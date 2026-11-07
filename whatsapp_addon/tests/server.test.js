@@ -6,7 +6,11 @@ const { shouldForward } = require("../whatsapp");
 
 const start = async ({ adminIps = ["127.0.0.1"], options } = {}) => {
   const env = setup({ options });
-  const app = createApp({ manager: env.manager, logger: silentLogger, adminIps });
+  const app = createApp({
+    manager: env.manager,
+    logger: silentLogger,
+    adminIps,
+  });
   const server = await new Promise((resolve) => {
     const s = app.listen(0, "127.0.0.1", () => resolve(s));
   });
@@ -19,7 +23,9 @@ const start = async ({ adminIps = ["127.0.0.1"], options } = {}) => {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   const admin = (method, url, body) =>
-    call(method, "/admin/api" + url, body, { "X-Requested-With": "whatsapp-admin" });
+    call(method, "/admin/api" + url, body, {
+      "X-Requested-With": "whatsapp-admin",
+    });
 
   const stop = () => {
     server.close();
@@ -34,7 +40,12 @@ test("management UI and API are refused for other peers", async () => {
     const res = await t.call("GET", url);
     assert.equal(res.status, 403, url);
   }
-  const res = await t.call("POST", "/admin/api/clients", { id: "x" }, { "X-Requested-With": "whatsapp-admin" });
+  const res = await t.call(
+    "POST",
+    "/admin/api/clients",
+    { id: "x" },
+    { "X-Requested-With": "whatsapp-admin" },
+  );
   assert.equal(res.status, 403);
   assert.equal(t.env.manager.exists("x"), false);
   t.stop();
@@ -54,7 +65,11 @@ test("service endpoints stay open for Home Assistant and keep OK/KO", async () =
   assert.equal(await res.text(), "OK");
   assert.equal(c.sent.length, 1);
 
-  res = await t.call("POST", "/sendMessage", { clientId: "nope", to: "1", body: "x" });
+  res = await t.call("POST", "/sendMessage", {
+    clientId: "nope",
+    to: "1",
+    body: "x",
+  });
   assert.equal(res.status, 404);
   assert.equal(await res.text(), "KO");
 
@@ -62,10 +77,17 @@ test("service endpoints stay open for Home Assistant and keep OK/KO", async () =
   assert.equal(res.status, 400);
 
   c.failNext = new Error("Number 1 is not on Whatsapp.");
-  res = await t.call("POST", "/sendMessage", { clientId: "default", to: "1", body: "x" });
+  res = await t.call("POST", "/sendMessage", {
+    clientId: "default",
+    to: "1",
+    body: "x",
+  });
   assert.equal(res.status, 500);
   assert.equal(await res.text(), "KO");
-  assert.match(decodeURIComponent(res.headers.get("x-whatsapp-error")), /not on Whatsapp/);
+  assert.match(
+    decodeURIComponent(res.headers.get("x-whatsapp-error")),
+    /not on Whatsapp/,
+  );
 
   for (const [url, body] of [
     ["/setStatus", { clientId: "default", status: "hi" }],
@@ -98,7 +120,10 @@ test("admin API: add, rename, disable, remove with confirmation", async () => {
   res = await t.admin("POST", "/clients", { id: "../x" });
   assert.equal(res.status, 400);
 
-  res = await t.admin("PATCH", "/clients/work", { label: "Office", enabled: false });
+  res = await t.admin("PATCH", "/clients/work", {
+    label: "Office",
+    enabled: false,
+  });
   const patched = await res.json();
   assert.equal(patched.label, "Office");
   assert.equal(patched.state, "disabled");
@@ -129,7 +154,12 @@ test("admin API: QR image, groups, reauth and settings", async () => {
   c.emit("qr", "QR");
   res = await t.admin("GET", "/clients/default/qr");
   assert.equal(res.headers.get("content-type"), "image/png");
-  assert.equal(Buffer.from(await res.arrayBuffer()).subarray(1, 4).toString(), "PNG");
+  assert.equal(
+    Buffer.from(await res.arrayBuffer())
+      .subarray(1, 4)
+      .toString(),
+    "PNG",
+  );
 
   res = await t.admin("GET", "/clients/default/groups");
   assert.equal((await res.json()).groups.length, 1);
@@ -156,21 +186,44 @@ test("the UI is served and uses relative URLs only", async () => {
 });
 
 test("status updates and protocol messages are not forwarded", () => {
-  const msg = (jid, message, fromMe) => ({ key: { remoteJid: jid, fromMe }, message });
-  assert.equal(shouldForward(msg("1@s.whatsapp.net", { conversation: "hi" })), true);
-  assert.equal(shouldForward(msg("status@broadcast", { conversation: "s" })), false);
-  assert.equal(shouldForward(msg("status@broadcast", { conversation: "s" }), { receiveStatus: true }), true);
-  assert.equal(shouldForward(msg("1@s.whatsapp.net", { protocolMessage: {} })), false);
-  assert.equal(shouldForward(msg("1@s.whatsapp.net", { conversation: "x" }, true)), false);
+  const msg = (jid, message, fromMe) => ({
+    key: { remoteJid: jid, fromMe },
+    message,
+  });
+  assert.equal(
+    shouldForward(msg("1@s.whatsapp.net", { conversation: "hi" })),
+    true,
+  );
+  assert.equal(
+    shouldForward(msg("status@broadcast", { conversation: "s" })),
+    false,
+  );
+  assert.equal(
+    shouldForward(msg("status@broadcast", { conversation: "s" }), {
+      receiveStatus: true,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldForward(msg("1@s.whatsapp.net", { protocolMessage: {} })),
+    false,
+  );
+  assert.equal(
+    shouldForward(msg("1@s.whatsapp.net", { conversation: "x" }, true)),
+    false,
+  );
   assert.equal(shouldForward(msg("1@s.whatsapp.net", null)), false);
 });
 
 test("the resolved Supervisor address is accepted in addition to the default", async () => {
   assert.deepEqual(
     await resolveSupervisorIps({
-      lookup: async () => [{ address: "::ffff:10.1.2.3" }, { address: "10.1.2.4" }],
+      lookup: async () => [
+        { address: "::ffff:10.1.2.3" },
+        { address: "10.1.2.4" },
+      ],
     }),
-    ["10.1.2.3", "10.1.2.4"]
+    ["10.1.2.3", "10.1.2.4"],
   );
   assert.deepEqual(
     await resolveSupervisorIps({
@@ -179,7 +232,7 @@ test("the resolved Supervisor address is accepted in addition to the default", a
       },
     }),
     [],
-    "a failed lookup must not break anything"
+    "a failed lookup must not break anything",
   );
 
   const t = await start({ adminIps: ["172.30.32.2"] });

@@ -1,65 +1,64 @@
 ## 2.0.2
 
- - All service fields now have selectors, so the Home Assistant action tool and the automation editor show real input fields in UI mode instead of "parameters only available in YAML mode". New optional `refresh` field for `get_groups`.
+- All service fields now have selectors, so the Home Assistant action tool and the automation editor show real input fields in UI mode instead of "parameters only available in YAML mode". New optional `refresh` field for `get_groups`.
 
 ## 2.0.1
 
- - Panel: removed a stray "null" text when there are no problems, "1 Client" singular, long counter labels wrap on small screens.
+- Panel: removed a stray "null" text when there are no problems, "1 Client" singular, long counter labels wrap on small screens.
 
 ## 2.0.0
 
- - New **WhatsApp panel** in the sidebar (Ingress): add, rename, enable/disable, connect/disconnect, re-authenticate and remove clients without restarting the add-on, QR pairing dialog, client details with groups and event log.
- - Real session states from Baileys events; a logout is shown as "authentication invalid" and is no longer re-paired automatically. No invented expiry times.
- - Persistent counters per client (received, sent, failed, connection losses, reconnect attempts) in `/data/stats.json`; no message contents are stored.
- - The client list stays in the add-on configuration (new optional options `disabled_clients`, `client_labels`, `inactivity_warning_days`). Existing installations migrate without pairing again.
- - The panel and its API only accept connections from the Supervisor ingress proxy. Service endpoints are unchanged.
- - `new_whatsapp_message` contains `groupName` for group messages; new service `whatsapp.get_groups`.
- - German and English translations, automated tests (`npm test`).
+- New **WhatsApp panel** in the sidebar (Ingress): add, rename, enable/disable, connect/disconnect, re-authenticate and remove clients without restarting the add-on, QR pairing dialog, client details with groups and event log.
+- Real session states from Baileys events; a logout is shown as "authentication invalid" and is no longer re-paired automatically. No invented expiry times.
+- Persistent counters per client (received, sent, failed, connection losses, reconnect attempts) in `/data/stats.json`; no message contents are stored.
+- The client list stays in the add-on configuration (new optional options `disabled_clients`, `client_labels`, `inactivity_warning_days`). Existing installations migrate without pairing again.
+- The panel and its API only accept connections from the Supervisor ingress proxy. Service endpoints are unchanged.
+- `new_whatsapp_message` contains `groupName` for group messages; new service `whatsapp.get_groups`.
+- German and English translations, automated tests (`npm test`).
 
 ## 1.6.2
 
- - WhatsApp status updates no longer fire `new_whatsapp_message` (new option `receive_status`, default off). Protocol messages are ignored as well.
- - Failed service calls now raise an error in Home Assistant with the reason.
- - Services validate their input; `options` was added to `send_message`.
- - A plain string `body` is sent as text message.
- - Docker build uses `npm ci`; layers are cached.
- - Fixed the broken YAML examples in the documentation.
+- WhatsApp status updates no longer fire `new_whatsapp_message` (new option `receive_status`, default off). Protocol messages are ignored as well.
+- Failed service calls now raise an error in Home Assistant with the reason.
+- Services validate their input; `options` was added to `send_message`.
+- A plain string `body` is sent as text message.
+- Docker build uses `npm ci`; layers are cached.
+- Fixed the broken YAML examples in the documentation.
 
 ## 1.6.1
 
- - Fixed Home Assistant services not executing (removed `@callback` on async handlers).
- - Restored add-on hostname replacement for the custom component.
- - Fixed `presence_subscribe` field mismatch (`to`).
- - Fixed crashes from unhandled rejections and logout cleanup.
- - Added input validation and proper HTTP status codes.
- - Removed `node_modules` from the repository.
+- Fixed Home Assistant services not executing (removed `@callback` on async handlers).
+- Restored add-on hostname replacement for the custom component.
+- Fixed `presence_subscribe` field mismatch (`to`).
+- Fixed crashes from unhandled rejections and logout cleanup.
+- Added input validation and proper HTTP status codes.
+- Removed `node_modules` from the repository.
 
 ## 1.6.0
 
- - Integrated Baileys library as an npm dependency and removed the local copy.
- 
+- Integrated Baileys library as an npm dependency and removed the local copy.
+
 ## 1.5.6
 
- - changed new_whatsapp_message event
-   simple usage of trigger.event.data.body
+- changed new_whatsapp_message event
+  simple usage of trigger.event.data.body
 
 ## 1.5.5
 
- - extendet logging 
+- extendet logging
 
 ## 1.5.4
 
- - Corrected & Extended Readme
- - Extended the docs.md 
-   
+- Corrected & Extended Readme
+- Extended the docs.md
+
 ## 1.5.3
 
- - serval codechanges
+- serval codechanges
 
-   
 ## 1.5.2
 
- - updated Baylies
+- updated Baylies
 
 ## 1.5.1
 

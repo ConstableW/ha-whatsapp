@@ -64,10 +64,12 @@ const createApp = ({
       }
 
       const missing = required.filter(
-        (field) => body[field] === undefined || body[field] === null
+        (field) => body[field] === undefined || body[field] === null,
       );
       if (missing.length) {
-        logger.error(`Error in ${name}. Missing field(s): ${missing.join(", ")}.`);
+        logger.error(
+          `Error in ${name}. Missing field(s): ${missing.join(", ")}.`,
+        );
         return res.status(400).send("KO");
       }
 
@@ -89,10 +91,10 @@ const createApp = ({
   };
 
   serviceRoute("sendMessage", ["to", "body"], (b) =>
-    manager.sendMessage(b.clientId, b.to, b.body, b.options)
+    manager.sendMessage(b.clientId, b.to, b.body, b.options),
   );
   serviceRoute("setStatus", ["status"], (b) =>
-    manager.setStatus(b.clientId, b.status)
+    manager.setStatus(b.clientId, b.status),
   );
   serviceRoute("presenceSubscribe", [], (b) => {
     const target = b.to !== undefined ? b.to : b.userId;
@@ -102,13 +104,17 @@ const createApp = ({
     return manager.presenceSubscribe(b.clientId, target);
   });
   serviceRoute("sendPresenceUpdate", ["type"], (b) =>
-    manager.sendPresenceUpdate(b.clientId, b.type, b.to)
+    manager.sendPresenceUpdate(b.clientId, b.type, b.to),
   );
   serviceRoute("sendInfinityPresenceUpdate", ["type"], (b) =>
-    manager.sendInfinityPresenceUpdate(b.clientId, b.type, b.to)
+    manager.sendInfinityPresenceUpdate(b.clientId, b.type, b.to),
   );
   serviceRoute("getGroups", [], async (b) => ({
-    json: { groups: await manager.getGroups(b.clientId, { refresh: b.refresh === true }) },
+    json: {
+      groups: await manager.getGroups(b.clientId, {
+        refresh: b.refresh === true,
+      }),
+    },
   }));
 
   // ---- Management UI and API (only reachable through ingress) -------
@@ -124,7 +130,9 @@ const createApp = ({
   // cross-site without a CORS preflight.
   const mutating = (req, res, next) => {
     if (req.get("X-Requested-With") !== "whatsapp-admin") {
-      return res.status(400).json({ error: "Missing X-Requested-With header." });
+      return res
+        .status(400)
+        .json({ error: "Missing X-Requested-With header." });
     }
     next();
   };
@@ -146,73 +154,113 @@ const createApp = ({
       });
   };
 
-  api.get("/state", wrap((req, res) => {
-    res.json({
-      clients: manager.list(),
-      totals: manager.totals(),
-      settings: manager.settings,
-      service: {
-        version: info.version || null,
-        startedAt,
-        now: Date.now(),
-      },
-    });
-  }));
+  api.get(
+    "/state",
+    wrap((req, res) => {
+      res.json({
+        clients: manager.list(),
+        totals: manager.totals(),
+        settings: manager.settings,
+        service: {
+          version: info.version || null,
+          startedAt,
+          now: Date.now(),
+        },
+      });
+    }),
+  );
 
-  api.post("/clients", wrap(async (req, res) => {
-    const body = req.body || {};
-    res.status(201).json(await manager.add({ id: body.id, label: body.label }));
-  }));
+  api.post(
+    "/clients",
+    wrap(async (req, res) => {
+      const body = req.body || {};
+      res
+        .status(201)
+        .json(await manager.add({ id: body.id, label: body.label }));
+    }),
+  );
 
-  api.get("/clients/:id", wrap((req, res) => {
-    res.json(manager.detail(req.params.id));
-  }));
+  api.get(
+    "/clients/:id",
+    wrap((req, res) => {
+      res.json(manager.detail(req.params.id));
+    }),
+  );
 
-  api.patch("/clients/:id", wrap(async (req, res) => {
-    const body = req.body || {};
-    let result = manager.detail(req.params.id);
-    if (own(body, "label")) result = await manager.rename(req.params.id, body.label);
-    if (own(body, "enabled")) result = await manager.setEnabled(req.params.id, body.enabled === true);
-    res.json(result);
-  }));
+  api.patch(
+    "/clients/:id",
+    wrap(async (req, res) => {
+      const body = req.body || {};
+      let result = manager.detail(req.params.id);
+      if (own(body, "label"))
+        result = await manager.rename(req.params.id, body.label);
+      if (own(body, "enabled"))
+        result = await manager.setEnabled(req.params.id, body.enabled === true);
+      res.json(result);
+    }),
+  );
 
-  api.post("/clients/:id/connect", wrap((req, res) => {
-    res.json(manager.connect(req.params.id));
-  }));
+  api.post(
+    "/clients/:id/connect",
+    wrap((req, res) => {
+      res.json(manager.connect(req.params.id));
+    }),
+  );
 
-  api.post("/clients/:id/disconnect", wrap((req, res) => {
-    res.json(manager.disconnect(req.params.id));
-  }));
+  api.post(
+    "/clients/:id/disconnect",
+    wrap((req, res) => {
+      res.json(manager.disconnect(req.params.id));
+    }),
+  );
 
-  api.post("/clients/:id/reauth", wrap(async (req, res) => {
-    res.json(await manager.reauth(req.params.id));
-  }));
+  api.post(
+    "/clients/:id/reauth",
+    wrap(async (req, res) => {
+      res.json(await manager.reauth(req.params.id));
+    }),
+  );
 
-  api.delete("/clients/:id", wrap(async (req, res) => {
-    const confirm = (req.body && req.body.confirm) || req.query.confirm;
-    if (confirm !== req.params.id) {
-      throw new ManagerError("Confirmation does not match the client ID.", 400);
-    }
-    await manager.remove(req.params.id);
-    res.json({ ok: true });
-  }));
+  api.delete(
+    "/clients/:id",
+    wrap(async (req, res) => {
+      const confirm = (req.body && req.body.confirm) || req.query.confirm;
+      if (confirm !== req.params.id) {
+        throw new ManagerError(
+          "Confirmation does not match the client ID.",
+          400,
+        );
+      }
+      await manager.remove(req.params.id);
+      res.json({ ok: true });
+    }),
+  );
 
-  api.get("/clients/:id/qr", wrap((req, res) => {
-    const png = manager.qrPng(req.params.id);
-    if (!png) return res.status(404).json({ error: "No QR code available." });
-    res.type("png").send(png);
-  }));
+  api.get(
+    "/clients/:id/qr",
+    wrap((req, res) => {
+      const png = manager.qrPng(req.params.id);
+      if (!png) return res.status(404).json({ error: "No QR code available." });
+      res.type("png").send(png);
+    }),
+  );
 
-  api.get("/clients/:id/groups", wrap(async (req, res) => {
-    const groups = await manager.getGroups(req.params.id, {
-      refresh: req.query.refresh === "1",
-    });
-    res.json({ groups });
-  }));
+  api.get(
+    "/clients/:id/groups",
+    wrap(async (req, res) => {
+      const groups = await manager.getGroups(req.params.id, {
+        refresh: req.query.refresh === "1",
+      });
+      res.json({ groups });
+    }),
+  );
 
-  api.put("/settings", wrap(async (req, res) => {
-    res.json(await manager.updateSettings(req.body || {}));
-  }));
+  api.put(
+    "/settings",
+    wrap(async (req, res) => {
+      res.json(await manager.updateSettings(req.body || {}));
+    }),
+  );
 
   app.use("/admin/api", api);
   app.use(express.static(publicDir, { index: "index.html" }));

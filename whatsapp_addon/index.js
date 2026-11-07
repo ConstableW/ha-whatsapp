@@ -51,7 +51,12 @@ const manager = new ClientManager({
 });
 manager.init();
 
-const app = createApp({ manager, logger, adminIps, info: { version: pkg.version } });
+const app = createApp({
+  manager,
+  logger,
+  adminIps,
+  info: { version: pkg.version },
+});
 app.listen(port, () => logger.info(`Whatsapp Addon started.`));
 
 if (!fixedAdminIps) {
@@ -77,6 +82,6 @@ process.on("SIGINT", shutdown);
 
 process.on("unhandledRejection", (reason) => {
   logger.error(
-    `Unhandled rejection: ${reason && reason.message ? reason.message : reason}`
+    `Unhandled rejection: ${reason && reason.message ? reason.message : reason}`,
   );
 });

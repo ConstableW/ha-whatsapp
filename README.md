@@ -45,10 +45,10 @@ _Screenshots show made-up demo data._
 - Failed service calls show a clear error in Home Assistant.
 - German and English panel.
 
-|  |  |
-| --- | --- |
+|                                                           |                                                  |
+| --------------------------------------------------------- | ------------------------------------------------ |
 | ![Pair a client with a QR code](docs/images/panel-qr.png) | ![Client details](docs/images/panel-details.png) |
-| ![Groups of a client](docs/images/panel-groups.png) | ![Event log](docs/images/panel-events.png) |
+| ![Groups of a client](docs/images/panel-groups.png)       | ![Event log](docs/images/panel-events.png)       |
 
 On a phone:
 
