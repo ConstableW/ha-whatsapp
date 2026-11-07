@@ -60,7 +60,7 @@ You need Home Assistant OS or Supervised (add-ons).
 
 1. Add this repository to the add-on store (Settings → Add-ons → Add-on Store → ⋮ → Repositories):
 
-   ```
+   ```text
    https://github.com/ConstableW/ha-whatsapp
    ```
 
